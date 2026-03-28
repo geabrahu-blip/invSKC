@@ -1,13 +1,19 @@
 import { useState, useEffect } from 'react';
 import { InventoryItem } from '../types';
-import { getInventoryItems, syncOldProductsToInventory, deleteInventoryItem } from '../services/db';
-import { Package, Search, Trash2 } from 'lucide-react';
+import { getInventoryItems, syncOldProductsToInventory, deleteInventoryItem, updateInventoryItem } from '../services/db';
+import { Package, Search, Trash2, Edit2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const Inventory = () => {
   const { isAdmin } = useAuth();
   const [products, setProducts] = useState<InventoryItem[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+
+  // Stock adjustment state
+  const [selectedProduct, setSelectedProduct] = useState<InventoryItem | null>(null);
+  const [adjustAmount, setAdjustAmount] = useState<number | ''>('');
+  const [adjustMode, setAdjustMode] = useState<'add' | 'subtract'>('subtract');
+  const [isAdjustModalOpen, setIsAdjustModalOpen] = useState(false);
 
   useEffect(() => {
     const init = async () => {
@@ -31,6 +37,47 @@ const Inventory = () => {
         console.error('Error deleting item:', error);
         alert('Hubo un error al eliminar el registro.');
       }
+    }
+  };
+
+  const handleOpenAdjustStock = (product: InventoryItem) => {
+    setSelectedProduct(product);
+    setAdjustAmount('');
+    setAdjustMode('subtract');
+    setIsAdjustModalOpen(true);
+  };
+
+  const handleAdjustStock = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedProduct || !adjustAmount) return;
+
+    const amount = Number(adjustAmount);
+    if (amount <= 0) {
+      alert('La cantidad debe ser mayor a 0.');
+      return;
+    }
+
+    let newUnits = selectedProduct.units;
+    if (adjustMode === 'add') {
+      newUnits += amount;
+    } else {
+      newUnits -= amount;
+      if (newUnits < 0) {
+        alert('No puedes quitar más stock del que hay disponible.');
+        return;
+      }
+    }
+
+    try {
+      await updateInventoryItem({
+        ...selectedProduct,
+        units: newUnits
+      });
+      setIsAdjustModalOpen(false);
+      loadData();
+    } catch (error) {
+      console.error('Error al ajustar el stock:', error);
+      alert('Hubo un error al actualizar el stock.');
     }
   };
 
@@ -104,11 +151,20 @@ const Inventory = () => {
                   </td>
                   <td className="px-6 py-4 text-center">
                     <div className="flex items-center justify-center gap-2">
+                      <button
+                        onClick={() => handleOpenAdjustStock(product)}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-md hover:bg-indigo-100 transition-colors"
+                        title="Ajustar stock (Quitar / Añadir)"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                        Stock
+                      </button>
+
                       {isAdmin && (
                         <button
                           onClick={() => handleDeleteItem(product.id)}
                           className="inline-flex items-center p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600 rounded-md transition-colors"
-                          title="Eliminar por error"
+                          title="Eliminar registro"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -128,6 +184,87 @@ const Inventory = () => {
           </table>
         </div>
       </div>
+
+      {/* Adjust Stock Modal */}
+      {isAdjustModalOpen && selectedProduct && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+              <h2 className="text-xl font-semibold text-gray-900">Ajustar Stock</h2>
+              <button onClick={() => setIsAdjustModalOpen(false)} className="text-gray-400 hover:text-gray-600">
+                &times;
+              </button>
+            </div>
+
+            <form onSubmit={handleAdjustStock} className="p-6 space-y-4">
+              <div className="bg-gray-50 p-3 rounded-md mb-4">
+                <p className="font-medium text-gray-900">{selectedProduct.name}</p>
+                <p className="text-sm text-gray-500">
+                  Stock actual: <span className="font-bold text-gray-900">{selectedProduct.units}</span>
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Acción</label>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="adjustMode"
+                      value="subtract"
+                      checked={adjustMode === 'subtract'}
+                      onChange={() => setAdjustMode('subtract')}
+                      className="text-indigo-600 focus:ring-indigo-500"
+                    />
+                    <span>Quitar</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="adjustMode"
+                      value="add"
+                      checked={adjustMode === 'add'}
+                      onChange={() => setAdjustMode('add')}
+                      className="text-indigo-600 focus:ring-indigo-500"
+                    />
+                    <span>Añadir</span>
+                  </label>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Cantidad a {adjustMode === 'add' ? 'añadir' : 'quitar'}</label>
+                <input
+                  type="number"
+                  min="1"
+                  required
+                  value={adjustAmount}
+                  onChange={(e) => setAdjustAmount(e.target.value ? Number(e.target.value) : '')}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
+
+              <div className="pt-4 flex gap-3 justify-end">
+                <button
+                  type="button"
+                  onClick={() => setIsAdjustModalOpen(false)}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className={`px-4 py-2 text-sm font-medium text-white rounded-md ${
+                    adjustMode === 'add' ? 'bg-green-600 hover:bg-green-700' : 'bg-indigo-600 hover:bg-indigo-700'
+                  }`}
+                >
+                  Confirmar Ajuste
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
