@@ -176,6 +176,7 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
             <option value="Mujer">Mujer</option>
             <option value="Varón">Varón</option>
             <option value="Unisex">Unisex</option>
+            <option value="Bebé">Bebé</option>
           </select>
         </div>
 
