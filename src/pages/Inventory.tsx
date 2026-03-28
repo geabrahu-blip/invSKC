@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { InventoryItem } from '../types';
 import { getInventoryItems, syncOldProductsToInventory, deleteInventoryItem, updateInventoryItem } from '../services/db';
-import { Package, Search, Trash2, Edit2 } from 'lucide-react';
+import { Package, Search, Trash2, Edit2, Archive, Layers } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const Inventory = () => {
@@ -88,6 +88,9 @@ const Inventory = () => {
     (p.gender && p.gender.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
+  const totalProducts = filteredProducts.length;
+  const totalUnits = filteredProducts.reduce((sum, item) => sum + item.units, 0);
+
   const getExpirationStatus = (dateString?: string) => {
     if (!dateString) return null;
     const expDate = new Date(dateString);
@@ -106,28 +109,60 @@ const Inventory = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-          <Package className="w-6 h-6 text-indigo-600" />
-          Inventario Global
-        </h1>
+    <div className="space-y-6 max-w-7xl mx-auto pb-10">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight flex items-center gap-3">
+            <Package className="w-8 h-8 text-indigo-600" />
+            Inventario General
+          </h1>
+          <p className="mt-1 text-sm text-gray-500">
+            Gestiona el stock global y las existencias de todos los productos de SKC.
+          </p>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="flex gap-4">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex items-center gap-4 min-w-[160px]">
+            <div className="bg-blue-50 p-3 rounded-lg text-blue-600">
+              <Layers className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Productos Distintos</p>
+              <p className="text-2xl font-bold text-gray-900">{totalProducts}</p>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex items-center gap-4 min-w-[160px]">
+            <div className="bg-emerald-50 p-3 rounded-lg text-emerald-600">
+              <Archive className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Total de Unidades</p>
+              <p className="text-2xl font-bold text-gray-900">{totalUnits}</p>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div className="bg-white p-4 rounded-lg shadow">
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+      {/* Search Bar */}
+      <div className="bg-white p-2 rounded-xl shadow-sm border border-gray-100 flex items-center">
+        <div className="relative w-full max-w-xl">
+          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <Search className="h-5 w-5 text-gray-400" />
+          </div>
           <input
             type="text"
             placeholder="Buscar por nombre, marca o categoría..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+            className="block w-full pl-11 pr-4 py-3 border-0 bg-transparent text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
           />
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      {/* Table Section */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
             <thead className="bg-gray-50 text-gray-600 font-medium border-b border-gray-200">
