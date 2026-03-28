@@ -4,12 +4,12 @@ import { getAuth } from "firebase/auth";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyB-Z-iOLagPr_lQMq87eQ_doqOLIfssxGs",
-  authDomain: "inventario-perfumes.firebaseapp.com",
-  projectId: "inventario-perfumes",
-  storageBucket: "inventario-perfumes.firebasestorage.app",
-  messagingSenderId: "712235668233",
-  appId: "1:712235668233:web:a616ad967df32199ff79d8"
+  apiKey: "AIzaSyAt6sKXrnU8d3tzClUIFBLlzETYM-lFYc4",
+  authDomain: "bodega-skc.firebaseapp.com",
+  projectId: "bodega-skc",
+  storageBucket: "bodega-skc.firebasestorage.app",
+  messagingSenderId: "522402556850",
+  appId: "1:522402556850:web:2b30a40e23f0482211d2ab"
 };
 
 // Initialize Firebase
