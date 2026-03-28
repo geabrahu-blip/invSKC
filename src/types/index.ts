@@ -23,6 +23,7 @@ export interface Product {
   brand?: string;
   category?: string;
   gender?: string; // e.g. 'Mujer' | 'Varón' | 'Unisex'
+  expirationDate?: string; // YYYY-MM-DD
 }
 
 export interface InventoryItem {
@@ -36,6 +37,7 @@ export interface InventoryItem {
   brand?: string;
   category?: string;
   gender?: string;
+  expirationDate?: string; // YYYY-MM-DD
   image: string;
   priceBs: number;
   wholesalePrice: number;

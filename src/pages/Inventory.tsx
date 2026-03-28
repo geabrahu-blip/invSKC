@@ -88,6 +88,23 @@ const Inventory = () => {
     (p.gender && p.gender.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
+  const getExpirationStatus = (dateString?: string) => {
+    if (!dateString) return null;
+    const expDate = new Date(dateString);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const diffTime = expDate.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays < 0) {
+      return { text: 'Vencido', color: 'bg-red-100 text-red-800' };
+    } else if (diffDays <= 30) {
+      return { text: `Vence en ${diffDays} días`, color: 'bg-orange-100 text-orange-800' };
+    } else {
+      return { text: `Vence en ${diffDays} días`, color: 'bg-green-100 text-green-800' };
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -117,7 +134,8 @@ const Inventory = () => {
               <tr>
                 <th className="px-6 py-4">Producto</th>
                 <th className="px-6 py-4 text-center">Stock</th>
-                <th className="px-6 py-4 text-right">Precio Venta</th>
+                <th className="px-6 py-4 text-center">Vencimiento</th>
+                <th className="px-6 py-4 text-right">Precios (Compra / Mayor / Venta)</th>
                 <th className="px-6 py-4 text-center">Acciones</th>
               </tr>
             </thead>
@@ -146,8 +164,27 @@ const Inventory = () => {
                   <td className="px-6 py-4 text-center font-medium">
                     {product.units}
                   </td>
-                  <td className="px-6 py-4 text-right text-emerald-600 font-medium">
-                    Bs. {product.sellingPrice.toFixed(2)}
+                  <td className="px-6 py-4 text-center">
+                    {product.expirationDate ? (
+                      <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getExpirationStatus(product.expirationDate)?.color}`}>
+                        {getExpirationStatus(product.expirationDate)?.text}
+                      </span>
+                    ) : (
+                      <span className="text-gray-400 text-sm">-</span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <div className="flex flex-col items-end gap-1 text-sm">
+                      <span className="text-gray-500" title="Precio Compra">
+                        C: Bs. {product.priceBs.toFixed(2)}
+                      </span>
+                      <span className="text-blue-600" title="Precio x Mayor">
+                        M: Bs. {product.wholesalePrice.toFixed(2)}
+                      </span>
+                      <span className="text-emerald-600 font-medium" title="Precio Venta Unidad">
+                        V: Bs. {product.sellingPrice.toFixed(2)}
+                      </span>
+                    </div>
                   </td>
                   <td className="px-6 py-4 text-center">
                     <div className="flex items-center justify-center gap-2">
@@ -175,7 +212,7 @@ const Inventory = () => {
               ))}
               {filteredProducts.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
+                  <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
                     No se encontraron productos en el inventario.
                   </td>
                 </tr>

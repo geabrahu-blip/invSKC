@@ -15,6 +15,7 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
   const [brand, setBrand] = useState('');
   const [category, setCategory] = useState('');
   const [gender, setGender] = useState('');
+  const [expirationDate, setExpirationDate] = useState('');
   const [priceBs, setPriceBs] = useState<number | ''>('');
   const [units, setUnits] = useState<number | ''>('');
   const [wholesalePrice, setWholesalePrice] = useState<number | ''>('');
@@ -27,6 +28,7 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
       setBrand(editingProduct.brand || '');
       setCategory(editingProduct.category || '');
       setGender(editingProduct.gender || '');
+      setExpirationDate(editingProduct.expirationDate || '');
       setPriceBs(editingProduct.priceBs);
       setUnits(editingProduct.units);
       setWholesalePrice(editingProduct.wholesalePrice);
@@ -42,6 +44,7 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
     setBrand('');
     setCategory('');
     setGender('');
+    setExpirationDate('');
     setPriceBs('');
     setUnits('');
     setWholesalePrice('');
@@ -71,6 +74,7 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
       brand,
       category,
       gender,
+      expirationDate: expirationDate || undefined,
       image,
       priceBs: Number(priceBs),
       units: Number(units),
@@ -175,58 +179,71 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
           </select>
         </div>
 
-        <div className="col-span-1 md:col-span-2 lg:col-span-1">
-          <label htmlFor="prod-units" className="block text-sm font-medium text-gray-700 mb-1">Unidades a ingresar en Bodega</label>
+        <div className="col-span-1">
+          <label htmlFor="prod-expiration" className="block text-sm font-medium text-gray-700 mb-1">Vencimiento (Opcional)</label>
           <input
-            id="prod-units"
-            type="number"
-            min="1"
-            required
-            value={units}
-            onChange={(e) => setUnits(Number(e.target.value))}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+            id="prod-expiration"
+            type="date"
+            value={expirationDate}
+            onChange={(e) => setExpirationDate(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 text-gray-700"
           />
         </div>
 
-        {/* Precios de Entrada */}
-        <div className="col-span-1">
-          <label htmlFor="prod-price-bs" className="block text-sm font-medium text-gray-700 mb-1">Precio Compra (Bs)</label>
-          <input
-            id="prod-price-bs"
-            type="number"
-            step="0.01"
-            required
-            value={priceBs}
-            onChange={(e) => setPriceBs(Number(e.target.value))}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-          />
-        </div>
+        <div className="col-span-1 md:col-span-2 lg:col-span-4 grid grid-cols-1 md:grid-cols-4 gap-4 pt-2 border-t border-gray-100">
+          <div className="col-span-1">
+            <label htmlFor="prod-units" className="block text-sm font-medium text-gray-700 mb-1">Unidades</label>
+            <input
+              id="prod-units"
+              type="number"
+              min="1"
+              required
+              value={units}
+              onChange={(e) => setUnits(Number(e.target.value))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
+          </div>
 
-        {/* Precios de Salida */}
-        <div className="col-span-1">
-          <label htmlFor="prod-price-mayor" className="block text-sm font-medium text-gray-700 mb-1">Precio Venta (x Mayor)</label>
-          <input
-            id="prod-price-mayor"
-            type="number"
-            step="0.01"
-            required
-            value={wholesalePrice}
-            onChange={(e) => setWholesalePrice(Number(e.target.value))}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-          />
-        </div>
+          {/* Precios de Entrada */}
+          <div className="col-span-1">
+            <label htmlFor="prod-price-bs" className="block text-sm font-medium text-gray-700 mb-1">Precio Compra (Bs)</label>
+            <input
+              id="prod-price-bs"
+              type="number"
+              step="0.01"
+              required
+              value={priceBs}
+              onChange={(e) => setPriceBs(Number(e.target.value))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
+          </div>
 
-        <div className="col-span-1">
-          <label htmlFor="prod-price-unidad" className="block text-sm font-medium text-gray-700 mb-1">Precio Venta (Unidad)</label>
-          <input
-            id="prod-price-unidad"
-            type="number"
-            step="0.01"
-            required
-            value={sellingPrice}
-            onChange={(e) => setSellingPrice(Number(e.target.value))}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-          />
+          {/* Precios de Salida */}
+          <div className="col-span-1">
+            <label htmlFor="prod-price-mayor" className="block text-sm font-medium text-gray-700 mb-1">Precio x Mayor</label>
+            <input
+              id="prod-price-mayor"
+              type="number"
+              step="0.01"
+              required
+              value={wholesalePrice}
+              onChange={(e) => setWholesalePrice(Number(e.target.value))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
+          </div>
+
+          <div className="col-span-1">
+            <label htmlFor="prod-price-unidad" className="block text-sm font-medium text-gray-700 mb-1">Precio Unidad</label>
+            <input
+              id="prod-price-unidad"
+              type="number"
+              step="0.01"
+              required
+              value={sellingPrice}
+              onChange={(e) => setSellingPrice(Number(e.target.value))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
+          </div>
         </div>
       </div>
 

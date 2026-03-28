@@ -105,6 +105,7 @@ export const addProduct = async (product: Omit<Product, 'id'>): Promise<Product>
       wholesalePrice: newProduct.wholesalePrice,
       sellingPrice: newProduct.sellingPrice,
       gender: newProduct.gender || existingInv.gender,
+      expirationDate: newProduct.expirationDate || existingInv.expirationDate,
       image: newProduct.image || existingInv.image // update image if new one provided
     });
   } else {
@@ -119,6 +120,7 @@ export const addProduct = async (product: Omit<Product, 'id'>): Promise<Product>
       brand: newProduct.brand,
       category: newProduct.category,
       gender: newProduct.gender,
+      expirationDate: newProduct.expirationDate,
       image: newProduct.image,
       priceBs: newProduct.priceBs,
       wholesalePrice: newProduct.wholesalePrice,
@@ -158,6 +160,7 @@ export const updateProduct = async (updatedProduct: Product): Promise<Product> =
       brand: updatedProduct.brand,
       category: updatedProduct.category,
       gender: updatedProduct.gender,
+      expirationDate: updatedProduct.expirationDate,
       image: updatedProduct.image || existingInv.image,
       priceBs: updatedProduct.priceBs,
       wholesalePrice: updatedProduct.wholesalePrice,
