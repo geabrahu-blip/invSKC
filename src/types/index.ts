@@ -50,3 +50,18 @@ export interface Purchase {
   date: string;
   createdAt: number;
 }
+
+export interface PurchaseWithTotal extends Purchase {
+  totalAmount?: number;
+}
+
+export interface StockAdjustment {
+  id: string;
+  productId: string;
+  productName: string;
+  amount: number; // positive or negative
+  mode: 'add' | 'subtract';
+  date: string; // user provided or automatic
+  reason: string;
+  createdAt: number;
+}

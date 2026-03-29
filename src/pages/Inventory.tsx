@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { InventoryItem } from '../types';
-import { getInventoryItems, syncOldProductsToInventory, deleteInventoryItem, updateInventoryItem } from '../services/db';
+import { getInventoryItems, syncOldProductsToInventory, deleteInventoryItem, updateInventoryItem, addStockAdjustment } from '../services/db';
 import { Package, Search, Trash2, Edit2, Archive, Layers } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -8,11 +8,14 @@ const Inventory = () => {
   const { isAdmin } = useAuth();
   const [products, setProducts] = useState<InventoryItem[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
 
   // Stock adjustment state
   const [selectedProduct, setSelectedProduct] = useState<InventoryItem | null>(null);
   const [adjustAmount, setAdjustAmount] = useState<number | ''>('');
   const [adjustMode, setAdjustMode] = useState<'add' | 'subtract'>('subtract');
+  const [adjustDate, setAdjustDate] = useState('');
+  const [adjustReason, setAdjustReason] = useState('');
   const [isAdjustModalOpen, setIsAdjustModalOpen] = useState(false);
 
   useEffect(() => {
@@ -44,12 +47,19 @@ const Inventory = () => {
     setSelectedProduct(product);
     setAdjustAmount('');
     setAdjustMode('subtract');
+    setAdjustDate(new Date().toISOString().split('T')[0]); // Default to today
+    setAdjustReason('');
     setIsAdjustModalOpen(true);
   };
 
   const handleAdjustStock = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedProduct || !adjustAmount) return;
+
+    if (adjustMode === 'subtract' && (!adjustDate || !adjustReason)) {
+      alert('La fecha y el motivo son requeridos al quitar stock.');
+      return;
+    }
 
     const amount = Number(adjustAmount);
     if (amount <= 0) {
@@ -73,6 +83,17 @@ const Inventory = () => {
         ...selectedProduct,
         units: newUnits
       });
+
+      // Record adjustment history
+      await addStockAdjustment({
+        productId: selectedProduct.id,
+        productName: selectedProduct.name,
+        amount: amount,
+        mode: adjustMode,
+        date: adjustMode === 'subtract' ? adjustDate : new Date().toISOString().split('T')[0],
+        reason: adjustMode === 'subtract' ? adjustReason : 'Aumento manual de stock'
+      });
+
       setIsAdjustModalOpen(false);
       loadData();
     } catch (error) {
@@ -86,7 +107,13 @@ const Inventory = () => {
     (p.brand && p.brand.toLowerCase().includes(searchTerm.toLowerCase())) ||
     (p.category && p.category.toLowerCase().includes(searchTerm.toLowerCase())) ||
     (p.gender && p.gender.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  ).sort((a, b) => {
+    if (sortOrder === 'desc') {
+      return b.units - a.units;
+    } else {
+      return a.units - b.units;
+    }
+  });
 
   const totalProducts = filteredProducts.length;
   const totalUnits = filteredProducts.reduce((sum, item) => sum + item.units, 0);
@@ -96,15 +123,40 @@ const Inventory = () => {
     const expDate = new Date(dateString);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const diffTime = expDate.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-    if (diffDays < 0) {
+    if (expDate < today) {
       return { text: 'Vencido', color: 'bg-red-100 text-red-800' };
-    } else if (diffDays <= 30) {
-      return { text: `Vence en ${diffDays} días`, color: 'bg-orange-100 text-orange-800' };
+    }
+
+    let years = expDate.getFullYear() - today.getFullYear();
+    let months = expDate.getMonth() - today.getMonth();
+    let days = expDate.getDate() - today.getDate();
+
+    if (days < 0) {
+      months -= 1;
+      // Get the days in the previous month
+      const prevMonth = new Date(expDate.getFullYear(), expDate.getMonth(), 0).getDate();
+      days += prevMonth;
+    }
+    if (months < 0) {
+      years -= 1;
+      months += 12;
+    }
+
+    const parts = [];
+    if (years > 0) parts.push(`${years} ${years === 1 ? 'año' : 'años'}`);
+    if (months > 0) parts.push(`${months} ${months === 1 ? 'mes' : 'meses'}`);
+    if (days > 0) parts.push(`${days} ${days === 1 ? 'día' : 'días'}`);
+
+    if (parts.length === 0) return { text: 'Vence hoy', color: 'bg-red-100 text-red-800' };
+
+    const text = `Quedan ${parts.join(', ')}`;
+    const totalDays = Math.ceil((expDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+    if (totalDays <= 30) {
+      return { text, color: 'bg-orange-100 text-orange-800' };
     } else {
-      return { text: `Vence en ${diffDays} días`, color: 'bg-green-100 text-green-800' };
+      return { text, color: 'bg-green-100 text-green-800' };
     }
   };
 
@@ -145,9 +197,9 @@ const Inventory = () => {
         </div>
       </div>
 
-      {/* Search Bar */}
-      <div className="bg-white p-2 rounded-xl shadow-sm border border-gray-100 flex items-center">
-        <div className="relative w-full max-w-xl">
+      {/* Search Bar & Filters */}
+      <div className="bg-white p-2 rounded-xl shadow-sm border border-gray-100 flex flex-col sm:flex-row gap-3">
+        <div className="relative w-full max-w-xl flex-1">
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
             <Search className="h-5 w-5 text-gray-400" />
           </div>
@@ -158,6 +210,16 @@ const Inventory = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="block w-full pl-11 pr-4 py-3 border-0 bg-transparent text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
           />
+        </div>
+        <div className="flex items-center min-w-[200px]">
+          <select
+            value={sortOrder}
+            onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
+            className="block w-full pl-3 pr-10 py-3 text-sm text-gray-700 bg-transparent border-l border-gray-200 focus:ring-0 focus:border-gray-200"
+          >
+            <option value="desc">Mayor a menor stock</option>
+            <option value="asc">Menor a mayor stock</option>
+          </select>
         </div>
       </div>
 
@@ -315,6 +377,31 @@ const Inventory = () => {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
                 />
               </div>
+
+              {adjustMode === 'subtract' && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Fecha de la salida</label>
+                    <input
+                      type="date"
+                      required
+                      value={adjustDate}
+                      onChange={(e) => setAdjustDate(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Motivo / Detalle</label>
+                    <textarea
+                      required
+                      value={adjustReason}
+                      onChange={(e) => setAdjustReason(e.target.value)}
+                      placeholder="Ej: Venta local, producto defectuoso, etc."
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 min-h-[80px]"
+                    />
+                  </div>
+                </>
+              )}
 
               <div className="pt-4 flex gap-3 justify-end">
                 <button

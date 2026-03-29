@@ -9,7 +9,7 @@ import {
   where
 } from 'firebase/firestore';
 import { db } from './firebase';
-import { Purchase, Product, InventoryItem, User } from '../types';
+import { Purchase, Product, InventoryItem, User, StockAdjustment } from '../types';
 
 // Helper to get a random ID when not provided
 const generateId = () => doc(collection(db, 'dummy')).id;
@@ -20,6 +20,12 @@ export const getPurchases = async (): Promise<Purchase[]> => {
   const querySnapshot = await getDocs(q);
   const purchases = querySnapshot.docs.map(doc => doc.data() as Purchase);
   return purchases.sort((a, b) => b.createdAt - a.createdAt);
+};
+
+export const getAllProducts = async (): Promise<Product[]> => {
+  const q = query(collection(db, 'products'));
+  const querySnapshot = await getDocs(q);
+  return querySnapshot.docs.map(doc => doc.data() as Product);
 };
 
 export const getPurchaseById = async (id: string): Promise<Purchase | null> => {
@@ -190,6 +196,25 @@ export const updateInventoryItem = async (item: InventoryItem): Promise<Inventor
 
 export const deleteInventoryItem = async (id: string): Promise<void> => {
   await deleteDoc(doc(db, 'inventory', id));
+};
+
+// Stock Adjustments
+export const addStockAdjustment = async (adjustment: Omit<StockAdjustment, 'id' | 'createdAt'>): Promise<StockAdjustment> => {
+  const id = generateId();
+  const newAdjustment: StockAdjustment = {
+    ...adjustment,
+    id,
+    createdAt: Date.now(),
+  };
+  await setDoc(doc(db, 'adjustments', id), newAdjustment);
+  return newAdjustment;
+};
+
+export const getStockAdjustments = async (): Promise<StockAdjustment[]> => {
+  const q = query(collection(db, 'adjustments'));
+  const querySnapshot = await getDocs(q);
+  const adjustments = querySnapshot.docs.map(doc => doc.data() as StockAdjustment);
+  return adjustments.sort((a, b) => b.createdAt - a.createdAt);
 };
 
 export const syncOldProductsToInventory = async (): Promise<void> => {
