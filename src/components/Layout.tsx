@@ -44,6 +44,12 @@ export default function Layout() {
               >
                 Inventario General
               </Link>
+              <Link
+                to="/catalog"
+                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive('/catalog') ? 'bg-indigo-100 text-indigo-700' : 'text-gray-600 hover:bg-gray-100'}`}
+              >
+                Catálogo Visual
+              </Link>
             </nav>
           </div>
 

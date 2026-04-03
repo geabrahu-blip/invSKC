@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { InventoryItem } from '../types';
 import { getInventoryItems, syncOldProductsToInventory, deleteInventoryItem, updateInventoryItem, addStockAdjustment } from '../services/db';
-import { Package, Search, Trash2, Edit2, Archive, Layers } from 'lucide-react';
+import { Package, Search, Trash2, Edit2, Archive, Layers, PenTool, Image as ImageIcon } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const Inventory = () => {
@@ -17,6 +17,10 @@ const Inventory = () => {
   const [adjustDate, setAdjustDate] = useState('');
   const [adjustReason, setAdjustReason] = useState('');
   const [isAdjustModalOpen, setIsAdjustModalOpen] = useState(false);
+
+  // Edit details state
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState<Partial<InventoryItem>>({});
 
   useEffect(() => {
     const init = async () => {
@@ -40,6 +44,37 @@ const Inventory = () => {
         console.error('Error deleting item:', error);
         alert('Hubo un error al eliminar el registro.');
       }
+    }
+  };
+
+  const handleOpenEdit = (product: InventoryItem) => {
+    setSelectedProduct(product);
+    setEditForm({ ...product });
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedProduct || !editForm.name) return;
+
+    try {
+      await updateInventoryItem(editForm as InventoryItem);
+      setIsEditModalOpen(false);
+      loadData();
+    } catch (error) {
+      console.error('Error saving edits:', error);
+      alert('No se pudieron guardar los cambios');
+    }
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setEditForm({ ...editForm, image: reader.result as string });
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -232,7 +267,7 @@ const Inventory = () => {
                 <th className="px-6 py-4">Producto</th>
                 <th className="px-6 py-4 text-center">Stock</th>
                 <th className="px-6 py-4 text-center">Vencimiento</th>
-                <th className="px-6 py-4 text-right">Precios (Compra / Mayor / Venta)</th>
+                <th className="px-6 py-4 text-right">Costo (Compra)</th>
                 <th className="px-6 py-4 text-center">Acciones</th>
               </tr>
             </thead>
@@ -250,15 +285,15 @@ const Inventory = () => {
                       </div>
                       <div>
                         <div className="font-medium text-gray-900">{product.name}</div>
-                        <div className="text-xs text-gray-500 flex items-center gap-1 flex-wrap">
-                          {product.brand && <span className="bg-gray-100 px-1 rounded">{product.brand}</span>}
-                          {product.category && <span className="bg-gray-100 px-1 rounded">{product.category}</span>}
-                          {product.gender && <span className="bg-indigo-50 text-indigo-700 px-1 rounded">{product.gender}</span>}
+                        <div className="text-xs text-gray-500 flex items-center gap-1 flex-wrap mt-1">
+                          {product.brand && <span className="bg-gray-100 px-1.5 py-0.5 rounded">{product.brand}</span>}
+                          {product.presentation && <span className="bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded">{product.presentation}</span>}
+                          {product.category && <span className="bg-gray-100 px-1.5 py-0.5 rounded">{product.category}</span>}
                         </div>
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-center font-medium">
+                  <td className="px-6 py-4 text-center font-medium text-lg">
                     {product.units}
                   </td>
                   <td className="px-6 py-4 text-center">
@@ -271,17 +306,9 @@ const Inventory = () => {
                     )}
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <div className="flex flex-col items-end gap-1 text-sm">
-                      <span className="text-gray-500" title="Precio Compra">
-                        C: Bs. {product.priceBs.toFixed(2)}
-                      </span>
-                      <span className="text-blue-600" title="Precio x Mayor">
-                        M: Bs. {product.wholesalePrice.toFixed(2)}
-                      </span>
-                      <span className="text-emerald-600 font-medium" title="Precio Venta Unidad">
-                        V: Bs. {product.sellingPrice.toFixed(2)}
-                      </span>
-                    </div>
+                    <span className="text-gray-600 font-medium" title="Precio Compra">
+                      Bs. {product.priceBs.toFixed(2)}
+                    </span>
                   </td>
                   <td className="px-6 py-4 text-center">
                     <div className="flex items-center justify-center gap-2">
@@ -295,13 +322,23 @@ const Inventory = () => {
                       </button>
 
                       {isAdmin && (
-                        <button
-                          onClick={() => handleDeleteItem(product.id)}
-                          className="inline-flex items-center p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600 rounded-md transition-colors"
-                          title="Eliminar registro"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        <>
+                          <button
+                            onClick={() => handleOpenEdit(product)}
+                            className="inline-flex items-center gap-1 px-3 py-1.5 bg-gray-50 text-gray-700 border border-gray-200 rounded-md hover:bg-gray-100 transition-colors"
+                            title="Editar detalles y precios"
+                          >
+                            <PenTool className="w-4 h-4" />
+                            Editar
+                          </button>
+                          <button
+                            onClick={() => handleDeleteItem(product.id)}
+                            className="inline-flex items-center p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600 rounded-md transition-colors ml-2"
+                            title="Eliminar registro"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </>
                       )}
                     </div>
                   </td>
@@ -418,6 +455,150 @@ const Inventory = () => {
                   }`}
                 >
                   Confirmar Ajuste
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Details Modal */}
+      {isEditModalOpen && selectedProduct && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 backdrop-blur-sm overflow-y-auto">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl overflow-hidden my-8">
+            <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center sticky top-0 bg-white z-10">
+              <h2 className="text-xl font-semibold text-gray-900">Editar Detalles del Producto</h2>
+              <button onClick={() => setIsEditModalOpen(false)} className="text-gray-400 hover:text-gray-600">
+                &times;
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEdit} className="p-6 space-y-4">
+              {/* Image Upload */}
+              <div className="flex gap-4 items-start mb-6">
+                <div className="w-24 h-24 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center bg-gray-50 overflow-hidden shrink-0">
+                  {editForm.image ? (
+                    <img src={editForm.image} alt="Preview" className="w-full h-full object-cover" />
+                  ) : (
+                    <ImageIcon className="h-8 w-8 text-gray-400" />
+                  )}
+                </div>
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Actualizar Imagen</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+                  <input
+                    type="text"
+                    required
+                    value={editForm.name || ''}
+                    onChange={(e) => setEditForm({...editForm, name: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Marca</label>
+                  <input
+                    type="text"
+                    value={editForm.brand || ''}
+                    onChange={(e) => setEditForm({...editForm, brand: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Categoría</label>
+                  <input
+                    type="text"
+                    value={editForm.category || ''}
+                    onChange={(e) => setEditForm({...editForm, category: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Presentación (ml/g)</label>
+                  <input
+                    type="text"
+                    value={editForm.presentation || ''}
+                    onChange={(e) => setEditForm({...editForm, presentation: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Vencimiento</label>
+                  <input
+                    type="date"
+                    value={editForm.expirationDate || ''}
+                    onChange={(e) => setEditForm({...editForm, expirationDate: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-4 mt-4 border-t border-gray-200">
+                <h3 className="font-medium text-gray-900 mb-4">Actualización de Precios</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Costo (Bs)</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      required
+                      value={editForm.priceBs || ''}
+                      onChange={(e) => setEditForm({...editForm, priceBs: Number(e.target.value)})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Venta Mayor (Bs)</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      required
+                      value={editForm.wholesalePrice || ''}
+                      onChange={(e) => setEditForm({...editForm, wholesalePrice: Number(e.target.value)})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Venta Unidad (Bs)</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      required
+                      value={editForm.sellingPrice || ''}
+                      onChange={(e) => setEditForm({...editForm, sellingPrice: Number(e.target.value)})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-6 flex gap-3 justify-end sticky bottom-0 bg-white">
+                <button
+                  type="button"
+                  onClick={() => setIsEditModalOpen(false)}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
+                >
+                  Guardar Cambios
                 </button>
               </div>
             </form>

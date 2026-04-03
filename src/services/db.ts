@@ -111,6 +111,7 @@ export const addProduct = async (product: Omit<Product, 'id'>): Promise<Product>
       wholesalePrice: newProduct.wholesalePrice,
       sellingPrice: newProduct.sellingPrice,
       gender: newProduct.gender || existingInv.gender,
+      presentation: newProduct.presentation || existingInv.presentation,
       expirationDate: newProduct.expirationDate || existingInv.expirationDate,
       image: newProduct.image || existingInv.image // update image if new one provided
     });
@@ -126,6 +127,7 @@ export const addProduct = async (product: Omit<Product, 'id'>): Promise<Product>
       brand: newProduct.brand,
       category: newProduct.category,
       gender: newProduct.gender,
+      presentation: newProduct.presentation,
       expirationDate: newProduct.expirationDate,
       image: newProduct.image,
       priceBs: newProduct.priceBs,
@@ -166,6 +168,7 @@ export const updateProduct = async (updatedProduct: Product): Promise<Product> =
       brand: updatedProduct.brand,
       category: updatedProduct.category,
       gender: updatedProduct.gender,
+      presentation: updatedProduct.presentation,
       expirationDate: updatedProduct.expirationDate,
       image: updatedProduct.image || existingInv.image,
       priceBs: updatedProduct.priceBs,

@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
-import { Purchase, Product } from '../types';
+import { useState, useEffect, useRef } from 'react';
+import { Purchase, Product, InventoryItem } from '../types';
 import { Image as ImageIcon, Plus, Save, X } from 'lucide-react';
+import { getInventoryItems } from '../services/db';
 
 interface ProductFormProps {
   purchase: Purchase;
@@ -15,11 +16,34 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
   const [brand, setBrand] = useState('');
   const [category, setCategory] = useState('');
   const [gender, setGender] = useState('');
+  const [presentation, setPresentation] = useState('');
   const [expirationDate, setExpirationDate] = useState('');
   const [priceBs, setPriceBs] = useState<number | ''>('');
   const [units, setUnits] = useState<number | ''>('');
   const [wholesalePrice, setWholesalePrice] = useState<number | ''>('');
   const [sellingPrice, setSellingPrice] = useState<number | ''>('');
+
+  const [existingItems, setExistingItems] = useState<InventoryItem[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const suggestionRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const loadItems = async () => {
+      const items = await getInventoryItems();
+      setExistingItems(items);
+    };
+    loadItems();
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (suggestionRef.current && !suggestionRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     if (editingProduct) {
@@ -28,6 +52,7 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
       setBrand(editingProduct.brand || '');
       setCategory(editingProduct.category || '');
       setGender(editingProduct.gender || '');
+      setPresentation(editingProduct.presentation || '');
       setExpirationDate(editingProduct.expirationDate || '');
       setPriceBs(editingProduct.priceBs);
       setUnits(editingProduct.units);
@@ -44,12 +69,33 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
     setBrand('');
     setCategory('');
     setGender('');
+    setPresentation('');
     setExpirationDate('');
     setPriceBs('');
     setUnits('');
     setWholesalePrice('');
     setSellingPrice('');
   };
+
+  const handleSuggestionSelect = (item: InventoryItem) => {
+    setName(item.name);
+    setBrand(item.brand || '');
+    setCategory(item.category || '');
+    setGender(item.gender || '');
+    setPresentation(item.presentation || '');
+    setPriceBs(item.priceBs);
+    setWholesalePrice(item.wholesalePrice);
+    setSellingPrice(item.sellingPrice);
+    if (item.image) setImage(item.image);
+    setShowSuggestions(false);
+  };
+
+  const uniqueBrands = Array.from(new Set(existingItems.map(i => i.brand).filter(Boolean)));
+  const uniqueCategories = Array.from(new Set(existingItems.map(i => i.category).filter(Boolean)));
+
+  const filteredSuggestions = name.length > 1
+    ? existingItems.filter(i => i.name.toLowerCase().includes(name.toLowerCase()))
+    : [];
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -77,6 +123,7 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
       brand,
       category,
       gender,
+      presentation: presentation || undefined,
       expirationDate: expirationDate || undefined,
       image,
       priceBs: Number(priceBs),
@@ -131,16 +178,40 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
         </div>
 
         {/* Nombre, Marca, Categoría */}
-        <div className="col-span-1 md:col-span-2 lg:col-span-2">
+        <div className="col-span-1 md:col-span-2 lg:col-span-2 relative" ref={suggestionRef}>
           <label htmlFor="prod-name" className="block text-sm font-medium text-gray-700 mb-1">Nombre del Producto</label>
           <input
             id="prod-name"
             type="text"
             required
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            onChange={(e) => {
+              setName(e.target.value);
+              setShowSuggestions(true);
+            }}
+            onFocus={() => setShowSuggestions(true)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+            placeholder="Busca o ingresa un nuevo producto"
           />
+          {showSuggestions && filteredSuggestions.length > 0 && (
+            <div className="absolute z-10 w-full mt-1 bg-white shadow-lg rounded-md border border-gray-200 max-h-60 overflow-y-auto">
+              <ul className="py-1">
+                {filteredSuggestions.map(item => (
+                  <li
+                    key={item.id}
+                    onClick={() => handleSuggestionSelect(item)}
+                    className="px-3 py-2 hover:bg-gray-100 cursor-pointer flex items-center justify-between"
+                  >
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">{item.name}</p>
+                      <p className="text-xs text-gray-500">{item.brand} - {item.presentation}</p>
+                    </div>
+                    <span className="text-xs text-emerald-600 font-medium">Últ. Costo: Bs. {item.priceBs}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
 
         <div className="col-span-1">
@@ -150,9 +221,13 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
             type="text"
             value={brand}
             onChange={(e) => setBrand(e.target.value)}
+            list="brands-list"
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
             placeholder="Ej. Carolina Herrera"
           />
+          <datalist id="brands-list">
+            {uniqueBrands.map((b, i) => <option key={i} value={b} />)}
+          </datalist>
         </div>
 
         <div className="col-span-1">
@@ -162,9 +237,13 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
             type="text"
             value={category}
             onChange={(e) => setCategory(e.target.value)}
+            list="categories-list"
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
             placeholder="Ej. EDP, EDT, Splash"
           />
+          <datalist id="categories-list">
+            {uniqueCategories.map((c, i) => <option key={i} value={c} />)}
+          </datalist>
         </div>
 
         <div className="col-span-1">
@@ -184,6 +263,18 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
         </div>
 
         <div className="col-span-1">
+          <label htmlFor="prod-presentation" className="block text-sm font-medium text-gray-700 mb-1">Presentación (ml/g)</label>
+          <input
+            id="prod-presentation"
+            type="text"
+            value={presentation}
+            onChange={(e) => setPresentation(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+            placeholder="Ej. 236ml"
+          />
+        </div>
+
+        <div className="col-span-1">
           <label htmlFor="prod-expiration" className="block text-sm font-medium text-gray-700 mb-1">Vencimiento (Opcional)</label>
           <input
             id="prod-expiration"
@@ -194,7 +285,7 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
           />
         </div>
 
-        <div className="col-span-1 md:col-span-2 lg:col-span-4 grid grid-cols-1 md:grid-cols-4 gap-4 pt-2 border-t border-gray-100">
+        <div className="col-span-1 md:col-span-2 lg:col-span-4 grid grid-cols-1 md:grid-cols-4 gap-4 pt-4 mt-2 border-t border-gray-100">
           <div className="col-span-1">
             <label htmlFor="prod-units" className="block text-sm font-medium text-gray-700 mb-1">Unidades</label>
             <input

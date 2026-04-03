@@ -5,6 +5,7 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import PurchaseDetail from './pages/PurchaseDetail';
 import Inventory from './pages/Inventory';
+import Catalog from './pages/Catalog';
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/purchases/:id" element={<PurchaseDetail />} />
             <Route path="/inventory" element={<Inventory />} />
+            <Route path="/catalog" element={<Catalog />} />
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
           </Route>
         </Routes>
