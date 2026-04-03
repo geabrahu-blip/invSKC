@@ -64,7 +64,10 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || priceBs === '' || units === '' || wholesalePrice === '' || sellingPrice === '') return;
+    if (!name || priceBs === '' || units === '' || wholesalePrice === '' || sellingPrice === '') {
+      alert("Por favor, asegúrate de llenar todos los campos requeridos con valores numéricos válidos. (No uses símbolos como '+' en los precios o unidades)");
+      return;
+    }
 
     const totalPrice = Number(priceBs) * Number(units);
 
