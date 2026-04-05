@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import { getPurchaseById, getProductsByPurchaseId } from '../services/db';
 import { Purchase, Product } from '../types';
 import {
@@ -19,6 +20,7 @@ import { addProduct, deleteProduct, updateProduct } from '../services/db';
 export default function PurchaseDetail() {
   const { id } = useParams<{ id: string }>();
   const { isAdmin } = useAuth();
+  const { success, error } = useToast();
   const [purchase, setPurchase] = useState<Purchase | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [editingProduct, setEditingProduct] = useState<Product | undefined>();
@@ -64,13 +66,20 @@ export default function PurchaseDetail() {
 
   const handleAddProduct = async (productData: Omit<Product, 'id'>) => {
     if (!purchase) return;
-    if (editingProduct) {
-      const updatedProduct = await updateProduct({ ...productData, id: editingProduct.id } as Product);
-      setProducts(products.map(p => p.id === updatedProduct.id ? updatedProduct : p));
-      setEditingProduct(undefined);
-    } else {
-      const newProduct = await addProduct(productData);
-      setProducts([...products, newProduct]);
+    try {
+      if (editingProduct) {
+        const updatedProduct = await updateProduct({ ...productData, id: editingProduct.id } as Product);
+        setProducts(products.map(p => p.id === updatedProduct.id ? updatedProduct : p));
+        setEditingProduct(undefined);
+        success('Producto actualizado correctamente en compra e inventario.');
+      } else {
+        const newProduct = await addProduct(productData);
+        setProducts([...products, newProduct]);
+        success('Producto añadido exitosamente a la compra y al inventario.');
+      }
+    } catch (err) {
+      console.error('Error saving product:', err);
+      error('Hubo un error al guardar el producto. Revisa tu conexión y permisos.');
     }
   };
 
@@ -85,8 +94,16 @@ export default function PurchaseDetail() {
   };
 
   const handleDeleteProduct = async (productId: string) => {
-    await deleteProduct(productId);
-    setProducts(products.filter((p) => p.id !== productId));
+    if (window.confirm('¿Estás seguro de que quieres eliminar este producto de la compra? (No se descontará del inventario global automáticamente)')) {
+      try {
+        await deleteProduct(productId);
+        setProducts(products.filter((p) => p.id !== productId));
+        success('Producto eliminado de la lista de compras.');
+      } catch (err) {
+        console.error('Error deleting product:', err);
+        error('Hubo un error al eliminar el producto.');
+      }
+    }
   };
 
   const netProfitWholesale = expectedWholesale - totalInvestment;

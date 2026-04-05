@@ -3,9 +3,11 @@ import { InventoryItem } from '../types';
 import { getInventoryItems, syncOldProductsToInventory, deleteInventoryItem, updateInventoryItem, addStockAdjustment } from '../services/db';
 import { Package, Search, Trash2, Edit2, Archive, Layers, PenTool, Image as ImageIcon } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 
 const Inventory = () => {
   const { isAdmin } = useAuth();
+  const { success, error } = useToast();
   const [products, setProducts] = useState<InventoryItem[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
@@ -60,10 +62,11 @@ const Inventory = () => {
     try {
       await updateInventoryItem(editForm as InventoryItem);
       setIsEditModalOpen(false);
+      success('Detalles del producto actualizados correctamente.');
       loadData();
-    } catch (error) {
-      console.error('Error saving edits:', error);
-      alert('No se pudieron guardar los cambios');
+    } catch (err) {
+      console.error('Error saving edits:', err);
+      error('No se pudieron guardar los cambios.');
     }
   };
 
@@ -92,13 +95,13 @@ const Inventory = () => {
     if (!selectedProduct || !adjustAmount) return;
 
     if (adjustMode === 'subtract' && (!adjustDate || !adjustReason)) {
-      alert('La fecha y el motivo son requeridos al quitar stock.');
+      error('La fecha y el motivo son requeridos al quitar stock.');
       return;
     }
 
     const amount = Number(adjustAmount);
     if (amount <= 0) {
-      alert('La cantidad debe ser mayor a 0.');
+      error('La cantidad debe ser mayor a 0.');
       return;
     }
 
@@ -108,7 +111,7 @@ const Inventory = () => {
     } else {
       newUnits -= amount;
       if (newUnits < 0) {
-        alert('No puedes quitar más stock del que hay disponible.');
+        error('No puedes quitar más stock del que hay disponible.');
         return;
       }
     }
@@ -130,10 +133,11 @@ const Inventory = () => {
       });
 
       setIsAdjustModalOpen(false);
+      success('Stock actualizado con éxito.');
       loadData();
-    } catch (error) {
-      console.error('Error al ajustar el stock:', error);
-      alert('Hubo un error al actualizar el stock.');
+    } catch (err) {
+      console.error('Error al ajustar el stock:', err);
+      error('Hubo un error al actualizar el stock.');
     }
   };
 

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import { getPurchases, getAllProducts, addPurchase, deletePurchase } from '../services/db';
 import { PurchaseWithTotal } from '../types';
 import { Plus, ArrowRight, Calendar, PackageOpen, Trash2, Search, DollarSign, Filter } from 'lucide-react';
@@ -7,6 +8,7 @@ import { Link, useNavigate } from 'react-router-dom';
 
 export default function Dashboard() {
   const { isAdmin } = useAuth();
+  const { success, error } = useToast();
   const navigate = useNavigate();
   const [purchases, setPurchases] = useState<PurchaseWithTotal[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -44,15 +46,24 @@ export default function Dashboard() {
 
   const handleAddPurchase = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !date) return;
+    if (!name || !date) {
+      error('Por favor, rellena todos los campos.');
+      return;
+    }
 
-    const newPurchase = await addPurchase({
-      name,
-      date,
-    });
+    try {
+      const newPurchase = await addPurchase({
+        name,
+        date,
+      });
 
-    setIsModalOpen(false);
-    navigate(`/purchases/${newPurchase.id}`);
+      success('¡Compra creada exitosamente!');
+      setIsModalOpen(false);
+      navigate(`/purchases/${newPurchase.id}`);
+    } catch (err) {
+      console.error(err);
+      error('Hubo un error al crear la compra en la base de datos.');
+    }
   };
 
   const filteredPurchases = purchases.filter(p => {
@@ -171,10 +182,17 @@ export default function Dashboard() {
               <div className="mt-6 pt-4 border-t border-gray-100 flex items-center justify-between">
                 {isAdmin && (
                   <button
-                    onClick={(e) => {
+                    onClick={async (e) => {
                       e.preventDefault();
-                      if (confirm('¿Estás seguro de que quieres eliminar esta compra?')) {
-                        deletePurchase(purchase.id).then(loadPurchases);
+                      if (confirm('¿Estás seguro de que quieres eliminar esta compra? Esta acción revertirá todo el inventario de esta compra.')) {
+                        try {
+                          await deletePurchase(purchase.id);
+                          success('Compra eliminada correctamente.');
+                          loadPurchases();
+                        } catch (err) {
+                          console.error(err);
+                          error('No se pudo eliminar la compra.');
+                        }
                       }
                     }}
                     className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors z-10 relative"
