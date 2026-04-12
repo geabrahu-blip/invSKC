@@ -25,6 +25,7 @@ export interface Product {
   gender?: string; // e.g. 'Mujer' | 'Varón' | 'Unisex'
   expirationDate?: string; // YYYY-MM-DD
   presentation?: string; // e.g. '236ml', '400g'
+  sku?: string; // Barcode or custom SKU for faster matching
 }
 
 export interface InventoryItem {
@@ -40,6 +41,7 @@ export interface InventoryItem {
   gender?: string;
   expirationDate?: string; // YYYY-MM-DD
   presentation?: string; // e.g. '236ml', '400g'
+  sku?: string; // Barcode or custom SKU
   image: string;
   priceBs: number;
   wholesalePrice: number;

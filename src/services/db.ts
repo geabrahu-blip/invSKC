@@ -95,12 +95,14 @@ export const addProduct = async (product: Omit<Product, 'id'>): Promise<Product>
 
   // Look for existing product in Bodega to merge stock instead of duplicate
   const allInventory = await getInventoryItems();
-  const existingInv = allInventory.find(item =>
-    item.storeId === 'bodega' &&
-    item.name.toLowerCase().trim() === newProduct.name.toLowerCase().trim() &&
-    (item.brand || '') === (newProduct.brand || '') &&
-    (item.category || '') === (newProduct.category || '')
-  );
+  const existingInv = allInventory.find(item => {
+    if (newProduct.sku && item.sku === newProduct.sku) return true;
+
+    return item.storeId === 'bodega' &&
+           item.name.toLowerCase().trim() === newProduct.name.toLowerCase().trim() &&
+           (item.brand || '') === (newProduct.brand || '') &&
+           (item.category || '') === (newProduct.category || '')
+  });
 
   if (existingInv) {
     // Update existing inventory item (add units, update prices to latest)
@@ -113,6 +115,7 @@ export const addProduct = async (product: Omit<Product, 'id'>): Promise<Product>
       gender: newProduct.gender || existingInv.gender,
       presentation: newProduct.presentation || existingInv.presentation,
       expirationDate: newProduct.expirationDate || existingInv.expirationDate,
+      sku: newProduct.sku || existingInv.sku,
       image: newProduct.image || existingInv.image // update image if new one provided
     });
   } else {
@@ -129,6 +132,7 @@ export const addProduct = async (product: Omit<Product, 'id'>): Promise<Product>
       gender: newProduct.gender,
       presentation: newProduct.presentation,
       expirationDate: newProduct.expirationDate,
+      sku: newProduct.sku,
       image: newProduct.image,
       priceBs: newProduct.priceBs,
       wholesalePrice: newProduct.wholesalePrice,
@@ -152,12 +156,13 @@ export const updateProduct = async (updatedProduct: Product): Promise<Product> =
 
   // We must update the inventory item in Bodega
   const allInventory = await getInventoryItems();
-  const existingInv = allInventory.find(item =>
-    item.storeId === 'bodega' &&
-    item.name.toLowerCase().trim() === oldProduct.name.toLowerCase().trim() &&
-    (item.brand || '') === (oldProduct.brand || '') &&
-    (item.category || '') === (oldProduct.category || '')
-  );
+  const existingInv = allInventory.find(item => {
+    if (oldProduct.sku && item.sku === oldProduct.sku) return true;
+    return item.storeId === 'bodega' &&
+           item.name.toLowerCase().trim() === oldProduct.name.toLowerCase().trim() &&
+           (item.brand || '') === (oldProduct.brand || '') &&
+           (item.category || '') === (oldProduct.category || '');
+  });
 
   if (existingInv) {
     const unitDifference = updatedProduct.units - oldProduct.units;
@@ -170,6 +175,7 @@ export const updateProduct = async (updatedProduct: Product): Promise<Product> =
       gender: updatedProduct.gender,
       presentation: updatedProduct.presentation,
       expirationDate: updatedProduct.expirationDate,
+      sku: updatedProduct.sku || existingInv.sku,
       image: updatedProduct.image || existingInv.image,
       priceBs: updatedProduct.priceBs,
       wholesalePrice: updatedProduct.wholesalePrice,

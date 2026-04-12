@@ -18,6 +18,7 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
   const [gender, setGender] = useState('');
   const [presentation, setPresentation] = useState('');
   const [expirationDate, setExpirationDate] = useState('');
+  const [sku, setSku] = useState('');
   const [priceBs, setPriceBs] = useState<number | ''>('');
   const [units, setUnits] = useState<number | ''>('');
   const [wholesalePrice, setWholesalePrice] = useState<number | ''>('');
@@ -54,6 +55,7 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
       setGender(editingProduct.gender || '');
       setPresentation(editingProduct.presentation || '');
       setExpirationDate(editingProduct.expirationDate || '');
+      setSku(editingProduct.sku || '');
       setPriceBs(editingProduct.priceBs);
       setUnits(editingProduct.units);
       setWholesalePrice(editingProduct.wholesalePrice);
@@ -71,6 +73,7 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
     setGender('');
     setPresentation('');
     setExpirationDate('');
+    setSku('');
     setPriceBs('');
     setUnits('');
     setWholesalePrice('');
@@ -83,6 +86,7 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
     setCategory(item.category || '');
     setGender(item.gender || '');
     setPresentation(item.presentation || '');
+    setSku(item.sku || '');
     setPriceBs(item.priceBs);
     setWholesalePrice(item.wholesalePrice);
     setSellingPrice(item.sellingPrice);
@@ -94,7 +98,7 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
   const uniqueCategories = Array.from(new Set(existingItems.map(i => i.category).filter(Boolean)));
 
   const filteredSuggestions = name.length > 1
-    ? existingItems.filter(i => i.name.toLowerCase().includes(name.toLowerCase()))
+    ? existingItems.filter(i => i.name.toLowerCase().includes(name.toLowerCase()) || (i.sku && i.sku.includes(name)))
     : [];
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -125,6 +129,7 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
       gender,
       presentation: presentation || undefined,
       expirationDate: expirationDate || undefined,
+      sku: sku || undefined,
       image,
       priceBs: Number(priceBs),
       units: Number(units),
@@ -177,8 +182,21 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
           </div>
         </div>
 
+        {/* Código de Barras / SKU */}
+        <div className="col-span-1 md:col-span-2 lg:col-span-1">
+          <label htmlFor="prod-sku" className="block text-sm font-medium text-gray-700 mb-1">Código (SKU/Balanza)</label>
+          <input
+            id="prod-sku"
+            type="text"
+            value={sku}
+            onChange={(e) => setSku(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 bg-indigo-50"
+            placeholder="Ej. CERA-100"
+          />
+        </div>
+
         {/* Nombre, Marca, Categoría */}
-        <div className="col-span-1 md:col-span-2 lg:col-span-2 relative" ref={suggestionRef}>
+        <div className="col-span-1 md:col-span-2 lg:col-span-3 relative" ref={suggestionRef}>
           <label htmlFor="prod-name" className="block text-sm font-medium text-gray-700 mb-1">Nombre del Producto</label>
           <input
             id="prod-name"
@@ -191,7 +209,7 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
             }}
             onFocus={() => setShowSuggestions(true)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-            placeholder="Busca o ingresa un nuevo producto"
+            placeholder="Busca por nombre o código..."
           />
           {showSuggestions && filteredSuggestions.length > 0 && (
             <div className="absolute z-10 w-full mt-1 bg-white shadow-lg rounded-md border border-gray-200 max-h-60 overflow-y-auto">
