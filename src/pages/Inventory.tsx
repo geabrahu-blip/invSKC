@@ -11,6 +11,7 @@ const Inventory = () => {
   const [products, setProducts] = useState<InventoryItem[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
+  const [isSyncing, setIsSyncing] = useState(false);
 
   // Stock adjustment state
   const [selectedProduct, setSelectedProduct] = useState<InventoryItem | null>(null);
@@ -25,12 +26,21 @@ const Inventory = () => {
   const [editForm, setEditForm] = useState<Partial<InventoryItem>>({});
 
   useEffect(() => {
-    const init = async () => {
-      await syncOldProductsToInventory();
-      loadData();
-    };
-    init();
+    loadData();
   }, []);
+
+  const handleSyncCatalog = async () => {
+    setIsSyncing(true);
+    try {
+      await syncOldProductsToInventory();
+      success('Catálogo público sincronizado exitosamente.');
+    } catch (err) {
+      console.error(err);
+      error('Hubo un error al sincronizar el catálogo.');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   const loadData = async () => {
     const productsData = await getInventoryItems();
@@ -72,13 +82,37 @@ const Inventory = () => {
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setEditForm({ ...editForm, image: reader.result as string });
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 800;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > MAX_WIDTH) {
+          height = Math.round((height * MAX_WIDTH) / width);
+          width = MAX_WIDTH;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressedDataUrl = canvas.toDataURL('image/webp', 0.7);
+          setEditForm({ ...editForm, image: compressedDataUrl });
+        } else {
+          setEditForm({ ...editForm, image: reader.result as string });
+        }
       };
-      reader.readAsDataURL(file);
-    }
+      img.src = event.target?.result as string;
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleOpenAdjustStock = (product: InventoryItem) => {
@@ -212,25 +246,36 @@ const Inventory = () => {
           </p>
         </div>
 
-        {/* Stats Cards */}
-        <div className="flex gap-4">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex items-center gap-4 min-w-[160px]">
-            <div className="bg-blue-50 p-3 rounded-lg text-blue-600">
-              <Layers className="w-6 h-6" />
+        {/* Stats Cards & Actions */}
+        <div className="flex flex-col sm:flex-row gap-4 items-center">
+          {isAdmin && (
+            <button
+              onClick={handleSyncCatalog}
+              disabled={isSyncing}
+              className="w-full sm:w-auto px-4 py-2 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+            >
+              {isSyncing ? 'Sincronizando...' : 'Sincronizar Catálogo'}
+            </button>
+          )}
+          <div className="flex gap-4">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex items-center gap-4 min-w-[160px]">
+              <div className="bg-blue-50 p-3 rounded-lg text-blue-600">
+                <Layers className="w-6 h-6" />
+              </div>
+              <div>
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Productos Distintos</p>
+                <p className="text-2xl font-bold text-gray-900">{totalProducts}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Productos Distintos</p>
-              <p className="text-2xl font-bold text-gray-900">{totalProducts}</p>
-            </div>
-          </div>
 
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex items-center gap-4 min-w-[160px]">
-            <div className="bg-emerald-50 p-3 rounded-lg text-emerald-600">
-              <Archive className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Total de Unidades</p>
-              <p className="text-2xl font-bold text-gray-900">{totalUnits}</p>
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex items-center gap-4 min-w-[160px]">
+              <div className="bg-emerald-50 p-3 rounded-lg text-emerald-600">
+                <Archive className="w-6 h-6" />
+              </div>
+              <div>
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Total de Unidades</p>
+                <p className="text-2xl font-bold text-gray-900">{totalUnits}</p>
+              </div>
             </div>
           </div>
         </div>

@@ -48,6 +48,20 @@ export interface InventoryItem {
   sellingPrice: number;
 }
 
+export interface PublicCatalogItem {
+  id: string; // Same as InventoryItem ID
+  name: string;
+  brand?: string;
+  category?: string;
+  presentation?: string;
+  sku?: string;
+  image: string;
+  inStock: boolean;
+  units: number;
+  wholesalePrice: number;
+  sellingPrice: number;
+}
+
 export interface Purchase {
   id: string;
   name: string;

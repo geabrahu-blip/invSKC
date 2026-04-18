@@ -9,10 +9,39 @@ import {
   where
 } from 'firebase/firestore';
 import { db } from './firebase';
-import { Purchase, Product, InventoryItem, User, StockAdjustment } from '../types';
+import { Purchase, Product, InventoryItem, User, StockAdjustment, PublicCatalogItem } from '../types';
 
 // Helper to get a random ID when not provided
 const generateId = () => doc(collection(db, 'dummy')).id;
+
+// Sync to Public Catalog
+const syncToPublicCatalog = async (item: InventoryItem) => {
+  // We only sync items that belong to the main warehouse (bodega)
+  if (item.storeId !== 'bodega') return;
+
+  const catalogRef = doc(db, 'public_catalog', item.id);
+
+
+  const publicItem: PublicCatalogItem = {
+    id: item.id,
+    name: item.name,
+    brand: item.brand,
+    category: item.category,
+    presentation: item.presentation,
+    sku: item.sku,
+    image: item.image,
+    inStock: item.units > 0,
+    units: item.units,
+    wholesalePrice: item.wholesalePrice,
+    sellingPrice: item.sellingPrice
+  };
+
+  await setDoc(catalogRef, publicItem);
+};
+
+const removeFromPublicCatalog = async (id: string) => {
+  await deleteDoc(doc(db, 'public_catalog', id));
+};
 
 // Purchases
 export const getPurchases = async (): Promise<Purchase[]> => {
@@ -106,7 +135,7 @@ export const addProduct = async (product: Omit<Product, 'id'>): Promise<Product>
 
   if (existingInv) {
     // Update existing inventory item (add units, update prices to latest)
-    await setDoc(doc(db, 'inventory', existingInv.id), {
+    const updatedInv = {
       ...existingInv,
       units: existingInv.units + newProduct.units,
       priceBs: newProduct.priceBs, // Update to latest cost
@@ -117,7 +146,9 @@ export const addProduct = async (product: Omit<Product, 'id'>): Promise<Product>
       expirationDate: newProduct.expirationDate || existingInv.expirationDate,
       sku: newProduct.sku || existingInv.sku,
       image: newProduct.image || existingInv.image // update image if new one provided
-    });
+    };
+    await setDoc(doc(db, 'inventory', existingInv.id), updatedInv);
+    await syncToPublicCatalog(updatedInv);
   } else {
     // Create an initial inventory record in Bodega
     const invId = generateId();
@@ -139,6 +170,7 @@ export const addProduct = async (product: Omit<Product, 'id'>): Promise<Product>
       sellingPrice: newProduct.sellingPrice
     };
     await setDoc(doc(db, 'inventory', invId), invItem);
+    await syncToPublicCatalog(invItem);
   }
 
   return newProduct;
@@ -167,7 +199,7 @@ export const updateProduct = async (updatedProduct: Product): Promise<Product> =
   if (existingInv) {
     const unitDifference = updatedProduct.units - oldProduct.units;
     // We update the inventory item replacing text fields and adjusting the units based on difference
-    await setDoc(doc(db, 'inventory', existingInv.id), {
+    const updatedInv = {
       ...existingInv,
       name: updatedProduct.name,
       brand: updatedProduct.brand,
@@ -181,7 +213,9 @@ export const updateProduct = async (updatedProduct: Product): Promise<Product> =
       wholesalePrice: updatedProduct.wholesalePrice,
       sellingPrice: updatedProduct.sellingPrice,
       units: Math.max(0, existingInv.units + unitDifference), // Avoid negative inventory
-    });
+    };
+    await setDoc(doc(db, 'inventory', existingInv.id), updatedInv);
+    await syncToPublicCatalog(updatedInv);
   }
 
   return updatedProduct;
@@ -200,11 +234,13 @@ export const getInventoryItems = async (): Promise<InventoryItem[]> => {
 
 export const updateInventoryItem = async (item: InventoryItem): Promise<InventoryItem> => {
   await setDoc(doc(db, 'inventory', item.id), item);
+  await syncToPublicCatalog(item);
   return item;
 };
 
 export const deleteInventoryItem = async (id: string): Promise<void> => {
   await deleteDoc(doc(db, 'inventory', id));
+  await removeFromPublicCatalog(id);
 };
 
 // Stock Adjustments
@@ -227,8 +263,11 @@ export const getStockAdjustments = async (): Promise<StockAdjustment[]> => {
 };
 
 export const syncOldProductsToInventory = async (): Promise<void> => {
-  // Obsolete function since everything is new in Firebase, but keeping signature for safety.
-  console.log("Sync not needed for Firebase initialized projects.");
+  // Migrates all existing items from the 'inventory' collection to 'public_catalog'
+  const allInventory = await getInventoryItems();
+  const syncPromises = allInventory.map(item => syncToPublicCatalog(item));
+  await Promise.all(syncPromises);
+  console.log("Inventario sincronizado con catálogo público.");
 };
 
 // Users

@@ -12,7 +12,12 @@ export default function Catalog() {
   }, []);
 
   const loadData = async () => {
-    const productsData = await getInventoryItems();
+    // In a real app, you would fetch from `public_catalog` collection directly if you separate the frontend.
+    // Since we are in the same app, we can just fetch from inventory, or fetch from public_catalog.
+    // Fetching from inventory here works, but fetching from public_catalog guarantees we only see public data.
+    const productsData = await getInventoryItems(); // Fetching from inventory for now as it's admin-facing too, but to be strictly correct with the new collection we should fetch from `public_catalog`.
+
+    // We will keep it simple and filter out 0 stock if needed, or just display them all.
     setProducts(productsData);
   };
 
