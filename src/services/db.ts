@@ -92,13 +92,14 @@ export const deletePurchase = async (id: string): Promise<void> => {
       const newUnits = Math.max(0, invItem.units - product.units);
       if (newUnits === 0) {
         // Option 1: Delete the inventory item if units hit 0
-        await deleteDoc(doc(db, 'inventory', invItem.id));
+        await deleteInventoryItem(invItem.id);
       } else {
         // Option 2: Update with reduced units
-        await setDoc(doc(db, 'inventory', invItem.id), {
+        const updatedItem = {
           ...invItem,
           units: newUnits
-        });
+        };
+        await updateInventoryItem(updatedItem);
       }
     }
 
