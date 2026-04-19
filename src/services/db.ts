@@ -25,15 +25,15 @@ const syncToPublicCatalog = async (item: InventoryItem) => {
   const publicItem: PublicCatalogItem = {
     id: item.id,
     name: item.name,
-    brand: item.brand,
-    category: item.category,
-    presentation: item.presentation,
-    sku: item.sku,
-    image: item.image,
+    brand: item.brand || '',
+    category: item.category || '',
+    presentation: item.presentation || '',
+    sku: item.sku || '',
+    image: item.image || '',
     inStock: item.units > 0,
-    units: item.units,
-    wholesalePrice: item.wholesalePrice,
-    sellingPrice: item.sellingPrice
+    units: item.units || 0,
+    wholesalePrice: item.wholesalePrice || 0,
+    sellingPrice: item.sellingPrice || 0
   };
 
   await setDoc(catalogRef, publicItem);

@@ -74,9 +74,9 @@ const Inventory = () => {
       setIsEditModalOpen(false);
       success('Detalles del producto actualizados correctamente.');
       loadData();
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error saving edits:', err);
-      error('No se pudieron guardar los cambios.');
+      error(`Error: ${err.message || 'No se pudieron guardar los cambios'}`);
     }
   };
 
