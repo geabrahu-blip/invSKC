@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { InventoryItem } from '../types';
-import { getPaginatedInventoryItems, syncOldProductsToInventory, deleteInventoryItem, updateInventoryItem, addStockAdjustment } from '../services/db';
-import { Package, Search, Trash2, Edit2, Archive, Layers, PenTool, Image as ImageIcon, AlertTriangle } from 'lucide-react';
+import { InventoryItem, Product } from '../types';
+import { getPaginatedInventoryItems, syncOldProductsToInventory, deleteInventoryItem, updateInventoryItem, addStockAdjustment, addProduct } from '../services/db';
+import { Package, Search, Trash2, Edit2, Archive, Layers, PenTool, Image as ImageIcon, AlertTriangle, Plus } from 'lucide-react';
 import { QueryDocumentSnapshot, DocumentData } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import ProductForm from '../components/ProductForm';
 
 const Inventory = () => {
   const { isAdmin } = useAuth();
@@ -28,6 +29,9 @@ const Inventory = () => {
   const [adjustDate, setAdjustDate] = useState('');
   const [adjustReason, setAdjustReason] = useState('');
   const [isAdjustModalOpen, setIsAdjustModalOpen] = useState(false);
+
+  // Form/Add state
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   // Edit details state
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -87,6 +91,18 @@ const Inventory = () => {
        console.error("Error loading data:", error);
     } finally {
       if (reset) setIsSearching(false);
+    }
+  };
+
+  const handleAddNewProduct = async (productData: Omit<Product, 'id'>) => {
+    try {
+      await addProduct(productData);
+      setIsAddModalOpen(false);
+      success('Producto ingresado correctamente al inventario continuo.');
+      loadData(true); // Recargar la tabla reseteando la paginación
+    } catch (err) {
+      console.error(err);
+      error('Error al guardar el nuevo producto.');
     }
   };
 
@@ -319,13 +335,22 @@ const Inventory = () => {
         {/* Stats Cards & Actions */}
         <div className="flex flex-col sm:flex-row gap-4 items-center">
           {isAdmin && (
-            <button
-              onClick={handleSyncCatalog}
-              disabled={isSyncing}
-              className="w-full sm:w-auto px-4 py-2 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
-            >
-              {isSyncing ? 'Sincronizando...' : 'Sincronizar Catálogo'}
-            </button>
+            <>
+              <button
+                onClick={handleSyncCatalog}
+                disabled={isSyncing}
+                className="w-full sm:w-auto px-4 py-2 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+              >
+                {isSyncing ? 'Sincronizando...' : 'Sincronizar Catálogo'}
+              </button>
+
+              <button
+                onClick={() => setIsAddModalOpen(true)}
+                className="w-full sm:w-auto flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+              >
+                <Plus className="h-5 w-5" /> Agregar Producto Nuevo
+              </button>
+            </>
           )}
           <div className="flex gap-4">
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex items-center gap-4 min-w-[160px]">
@@ -505,6 +530,24 @@ const Inventory = () => {
           >
             {isLoadingMore ? 'Cargando...' : 'Cargar más productos'}
           </button>
+        </div>
+      )}
+
+      {/* Add New Product Modal */}
+      {isAddModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 backdrop-blur-sm overflow-y-auto">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl my-8 relative">
+            <div className="absolute top-4 right-4 z-10">
+              <button onClick={() => setIsAddModalOpen(false)} className="p-2 bg-white rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600 shadow-sm border border-gray-200">
+                &times;
+              </button>
+            </div>
+
+            <ProductForm
+              purchase={{ id: 'continuous-ledger', name: 'Inventario Continuo', date: new Date().toISOString().split('T')[0], createdAt: Date.now() }}
+              onAdd={handleAddNewProduct}
+            />
+          </div>
         </div>
       )}
 
