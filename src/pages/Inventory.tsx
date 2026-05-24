@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { InventoryItem } from '../types';
-import { getInventoryItems, syncOldProductsToInventory, deleteInventoryItem, updateInventoryItem, addStockAdjustment } from '../services/db';
+import { getPaginatedInventoryItems, syncOldProductsToInventory, deleteInventoryItem, updateInventoryItem, addStockAdjustment } from '../services/db';
 import { Package, Search, Trash2, Edit2, Archive, Layers, PenTool, Image as ImageIcon } from 'lucide-react';
+import { QueryDocumentSnapshot, DocumentData } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 
@@ -12,6 +13,11 @@ const Inventory = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
   const [isSyncing, setIsSyncing] = useState(false);
+
+  // Pagination state
+  const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot<DocumentData, DocumentData> | null>(null);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   // Stock adjustment state
   const [selectedProduct, setSelectedProduct] = useState<InventoryItem | null>(null);
@@ -43,8 +49,25 @@ const Inventory = () => {
   };
 
   const loadData = async () => {
-    const productsData = await getInventoryItems();
-    setProducts(productsData);
+    const { items, lastDoc: newLastDoc } = await getPaginatedInventoryItems(30, null);
+    setProducts(items);
+    setLastDoc(newLastDoc);
+    setHasMore(newLastDoc !== null && items.length === 30);
+  };
+
+  const handleLoadMore = async () => {
+    if (!lastDoc || isLoadingMore) return;
+    setIsLoadingMore(true);
+    try {
+      const { items, lastDoc: newLastDoc } = await getPaginatedInventoryItems(30, lastDoc);
+      setProducts(prev => [...prev, ...items]);
+      setLastDoc(newLastDoc);
+      setHasMore(newLastDoc !== null && items.length === 30);
+    } catch (err) {
+      console.error("Error cargando más productos:", err);
+    } finally {
+      setIsLoadingMore(false);
+    }
   };
 
   const handleDeleteItem = async (id: string) => {
@@ -404,6 +427,18 @@ const Inventory = () => {
           </table>
         </div>
       </div>
+
+      {hasMore && (
+        <div className="mt-6 flex justify-center">
+          <button
+            onClick={handleLoadMore}
+            disabled={isLoadingMore}
+            className="px-6 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg shadow-sm hover:bg-gray-50 disabled:opacity-50 transition-colors font-medium"
+          >
+            {isLoadingMore ? 'Cargando...' : 'Cargar más productos'}
+          </button>
+        </div>
+      )}
 
       {/* Adjust Stock Modal */}
       {isAdjustModalOpen && selectedProduct && (
