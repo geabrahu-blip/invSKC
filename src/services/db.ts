@@ -232,7 +232,8 @@ export const addProduct = async (product: Omit<Product, 'id'>): Promise<Product>
       presentation: newProduct.presentation || existingInv.presentation,
       expirationDate: newProduct.expirationDate || existingInv.expirationDate,
       sku: newProduct.sku || existingInv.sku,
-      image: newProduct.image || existingInv.image // update image if new one provided
+      image: newProduct.image || existingInv.image, // update image if new one provided
+      minStock: newProduct.minStock ?? existingInv.minStock // update minStock if provided
     };
     // Asegurarnos de actualizar las searchKeywords también en el inventario
     const invKeywords = generateSearchKeywords(updatedInv);
@@ -258,7 +259,8 @@ export const addProduct = async (product: Omit<Product, 'id'>): Promise<Product>
       image: newProduct.image,
       priceBs: newProduct.priceBs,
       wholesalePrice: newProduct.wholesalePrice,
-      sellingPrice: newProduct.sellingPrice
+      sellingPrice: newProduct.sellingPrice,
+      minStock: newProduct.minStock || 0
     };
     const invKeywords = generateSearchKeywords(invItem);
     const invToSave = { ...invItem, searchKeywords: invKeywords };
@@ -308,6 +310,7 @@ export const updateProduct = async (updatedProduct: Product): Promise<Product> =
       wholesalePrice: updatedProduct.wholesalePrice,
       sellingPrice: updatedProduct.sellingPrice,
       units: Math.max(0, existingInv.units + unitDifference), // Avoid negative inventory
+      minStock: updatedProduct.minStock ?? existingInv.minStock // inherit or update minStock
     };
 
     const invKeywords = generateSearchKeywords(updatedInv);
