@@ -85,3 +85,15 @@ export interface StockAdjustment {
   reason: string;
   createdAt: number;
 }
+
+export interface FinancialLot {
+  id: string;
+  type: 'NEW_PRODUCT' | 'RESTOCK';
+  productId: string;
+  productName: string;
+  addedUnits: number;
+  unitCost: number; // Price of cost (priceBs) at the time of entry
+  totalInvestment: number; // addedUnits * unitCost
+  date: string; // YYYY-MM-DD for UI filtering
+  timestamp: number; // Strict chronological sorting
+}
