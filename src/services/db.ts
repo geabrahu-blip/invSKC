@@ -403,7 +403,7 @@ export const getPaginatedInventoryItems = async (
 
 export const updateInventoryItem = async (item: InventoryItem): Promise<InventoryItem> => {
   let imageUrl = item.image;
-  if (imageUrl && imageUrl.startsWith('data:image')) {
+  if (imageUrl) {
     imageUrl = await uploadImageToStorage(imageUrl, `inventory/${item.id}_${Date.now()}.webp`);
   }
 
