@@ -120,10 +120,17 @@ const generateSearchKeywords = (product: { name: string, brand?: string, sku?: s
 
 // Helper to upload base64 images to Firebase Storage
 const uploadImageToStorage = async (base64String: string, pathRef: string): Promise<string> => {
-  // Only upload if it's a data url, otherwise assume it's already a public URL or empty
-  if (!base64String || !base64String.startsWith('data:image')) {
+  // Defensive bypass: If it's already a public URL or empty, short-circuit immediately.
+  // This prevents Firebase from firing XHR pre-flights that cause CORS freezes.
+  if (!base64String || base64String.startsWith('http://') || base64String.startsWith('https://')) {
     return base64String;
   }
+
+  // Only upload if it's a valid data url
+  if (!base64String.startsWith('data:image')) {
+    return base64String;
+  }
+
   const imageRef = ref(storage, pathRef);
   await uploadString(imageRef, base64String, 'data_url');
   return await getDownloadURL(imageRef);
