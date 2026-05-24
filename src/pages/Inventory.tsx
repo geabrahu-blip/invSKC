@@ -277,48 +277,6 @@ const Inventory = () => {
   const totalProducts = products.length; // Este será el total de la página cargada
   const totalUnits = products.reduce((sum, item) => sum + item.units, 0);
 
-  const getExpirationStatus = (dateString?: string) => {
-    if (!dateString) return null;
-    const expDate = new Date(dateString);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    if (expDate < today) {
-      return { text: 'Vencido', color: 'bg-red-100 text-red-800' };
-    }
-
-    let years = expDate.getFullYear() - today.getFullYear();
-    let months = expDate.getMonth() - today.getMonth();
-    let days = expDate.getDate() - today.getDate();
-
-    if (days < 0) {
-      months -= 1;
-      // Get the days in the previous month
-      const prevMonth = new Date(expDate.getFullYear(), expDate.getMonth(), 0).getDate();
-      days += prevMonth;
-    }
-    if (months < 0) {
-      years -= 1;
-      months += 12;
-    }
-
-    const parts = [];
-    if (years > 0) parts.push(`${years} ${years === 1 ? 'año' : 'años'}`);
-    if (months > 0) parts.push(`${months} ${months === 1 ? 'mes' : 'meses'}`);
-    if (days > 0) parts.push(`${days} ${days === 1 ? 'día' : 'días'}`);
-
-    if (parts.length === 0) return { text: 'Vence hoy', color: 'bg-red-100 text-red-800' };
-
-    const text = `Quedan ${parts.join(', ')}`;
-    const totalDays = Math.ceil((expDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-
-    if (totalDays <= 30) {
-      return { text, color: 'bg-orange-100 text-orange-800' };
-    } else {
-      return { text, color: 'bg-green-100 text-green-800' };
-    }
-  };
-
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-10">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -406,13 +364,13 @@ const Inventory = () => {
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
-            <thead className="bg-gray-50 text-gray-600 font-medium border-b border-gray-200">
+            <thead className="bg-gray-50 text-gray-600 font-medium border-b border-gray-200 uppercase text-xs tracking-wider">
               <tr>
-                <th className="px-6 py-4">Producto</th>
-                <th className="px-6 py-4 text-center">Stock</th>
-                <th className="px-6 py-4 text-center">Vencimiento</th>
-                <th className="px-6 py-4 text-right">Costo (Compra)</th>
-                <th className="px-6 py-4 text-center">Acciones</th>
+                <th className="px-6 py-4 w-1/3">Producto</th>
+                <th className="px-6 py-4 text-center w-32">Stock</th>
+                <th className="px-6 py-4 text-right w-40">Costo Base</th>
+                <th className="px-6 py-4 text-right w-48">Precios de Venta</th>
+                <th className="px-6 py-4 text-center w-40">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
@@ -423,7 +381,7 @@ const Inventory = () => {
                 <tr key={product.id} className={`hover:bg-gray-50 transition-colors ${isCritical ? 'bg-red-50/40' : ''}`}>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 bg-gray-100 rounded overflow-hidden">
+                      <div className="h-10 w-10 bg-gray-100 rounded overflow-hidden shrink-0">
                         {product.image ? (
                           <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
                         ) : (
@@ -453,20 +411,35 @@ const Inventory = () => {
                       <span className="font-medium text-gray-900 text-lg">{product.units}</span>
                     )}
                   </td>
-                  <td className="px-6 py-4 text-center">
-                    {product.expirationDate ? (
-                      <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getExpirationStatus(product.expirationDate)?.color}`}>
-                        {getExpirationStatus(product.expirationDate)?.text}
-                      </span>
-                    ) : (
-                      <span className="text-gray-400 text-sm">-</span>
-                    )}
-                  </td>
+
+                  {/* Columna: Costo Base */}
                   <td className="px-6 py-4 text-right">
-                    <span className="text-gray-600 font-medium" title="Precio Compra">
-                      Bs. {product.priceBs.toFixed(2)}
-                    </span>
+                    <div className="flex flex-col items-end justify-center">
+                      <span className="text-gray-500 text-[10px] font-bold uppercase tracking-wider mb-0.5">Compra</span>
+                      <span className="text-gray-900 font-bold text-sm bg-gray-100/80 px-2 py-1 rounded border border-gray-200/50">
+                        Bs. {product.priceBs.toFixed(2)}
+                      </span>
+                    </div>
                   </td>
+
+                  {/* Columna: Precios de Venta */}
+                  <td className="px-6 py-4 text-right">
+                    <div className="flex flex-col items-end gap-1.5">
+                      <div className="flex items-center justify-end gap-2 w-full">
+                        <span className="text-gray-400 text-[10px] font-bold uppercase tracking-wider">Mayor:</span>
+                        <span className="text-amber-600 font-semibold w-20 text-right">
+                          Bs. {product.wholesalePrice.toFixed(2)}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-end gap-2 w-full">
+                        <span className="text-gray-400 text-[10px] font-bold uppercase tracking-wider">Detalle:</span>
+                        <span className="text-emerald-600 font-bold w-20 text-right">
+                          Bs. {product.sellingPrice.toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                  </td>
+
                   <td className="px-6 py-4 text-center">
                     <div className="flex items-center justify-center gap-2">
                       <button
