@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { getPurchases, getAllProducts, addPurchase, deletePurchase } from '../services/db';
-import { PurchaseWithTotal } from '../types';
-import { Plus, ArrowRight, Calendar, PackageOpen, Trash2, Search, DollarSign, Filter } from 'lucide-react';
+import { getPurchases, getAllProducts, addPurchase, deletePurchase, getExpiringProducts } from '../services/db';
+import { PurchaseWithTotal, InventoryItem } from '../types';
+import { Plus, ArrowRight, Calendar, PackageOpen, Trash2, Search, DollarSign, Filter, AlertCircle } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 
 export default function Dashboard() {
@@ -19,9 +19,22 @@ export default function Dashboard() {
   const [name, setName] = useState('');
   const [date, setDate] = useState('');
 
+  // FEFO State
+  const [expiringProducts, setExpiringProducts] = useState<InventoryItem[]>([]);
+
   useEffect(() => {
     loadPurchases();
+    loadExpiring();
   }, []);
+
+  const loadExpiring = async () => {
+    try {
+      const expiring = await getExpiringProducts(30);
+      setExpiringProducts(expiring);
+    } catch (err) {
+      console.error("Error cargando productos por vencer:", err);
+    }
+  };
 
   const loadPurchases = async () => {
     const [purchasesData, productsData] = await Promise.all([
@@ -82,6 +95,36 @@ export default function Dashboard() {
     const date = new Date(Number(y), Number(m) - 1);
     return date.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
   };
+
+  // --- FEFO Logic Processing ---
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const expired: (InventoryItem & { counter: string })[] = [];
+  const highRisk: (InventoryItem & { counter: string })[] = [];
+  const mediumRisk: (InventoryItem & { counter: string })[] = [];
+
+  expiringProducts.forEach(prod => {
+    const expDate = new Date(prod.expirationDate!);
+    const diffTime = expDate.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    let counter = '';
+    if (diffDays < 0) counter = `${Math.abs(diffDays)}d vencido`;
+    else if (diffDays === 0) counter = 'hoy';
+    else if (diffDays < 30) counter = `${diffDays}d`;
+    else {
+      const months = Math.floor(diffDays / 30);
+      counter = `${months} mes${months > 1 ? 'es' : ''}`;
+    }
+
+    const item = { ...prod, counter };
+
+    if (diffDays < 0) expired.push(item);
+    else if (diffDays <= 90) highRisk.push(item);
+    else if (diffDays <= 180) mediumRisk.push(item);
+  });
+  // -----------------------------
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-10">
@@ -148,6 +191,105 @@ export default function Dashboard() {
             ))}
           </select>
         </div>
+      </div>
+
+      {/* FEFO Dashboard Section */}
+      <div className="mb-4">
+        <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+          <AlertCircle className="w-5 h-5 text-gray-700" />
+          Alertas de Vencimiento (FEFO)
+        </h2>
+
+        <div className="grid gap-4 md:grid-cols-3">
+          {/* BLOQUE ROJO: Vencidos */}
+          <div className="bg-red-50 border border-red-100 rounded-xl p-4 shadow-sm">
+            <h3 className="font-semibold text-red-800 flex justify-between items-center mb-3">
+              <span>🔴 Vencidos</span>
+              <span className="bg-red-200 text-red-800 text-xs px-2 py-1 rounded-full">{expired.length}</span>
+            </h3>
+            {expired.length === 0 ? (
+              <p className="text-sm text-red-400 italic">No hay productos vencidos.</p>
+            ) : (
+              <ul className="divide-y divide-red-100/50 max-h-60 overflow-y-auto pr-1">
+                {expired.map(p => (
+                  <li key={p.id} className="py-2 flex justify-between items-start">
+                    <div>
+                      <p className="font-medium text-red-900 text-sm leading-tight">
+                        {p.name} <span className="text-red-500 font-normal text-xs ml-1">({p.counter})</span>
+                      </p>
+                      {p.brand && <p className="text-xs text-red-700 opacity-80 mt-0.5">{p.brand}</p>}
+                    </div>
+                    <span className="font-bold text-red-900 text-sm ml-2 bg-red-100 px-1.5 py-0.5 rounded shrink-0">
+                      {p.units} un.
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {/* BLOQUE NARANJA: Riesgo Alto (90 días) */}
+          <div className="bg-orange-50 border border-orange-100 rounded-xl p-4 shadow-sm">
+            <h3 className="font-semibold text-orange-800 flex justify-between items-center mb-3">
+              <span>🟠 Riesgo Alto (90d)</span>
+              <span className="bg-orange-200 text-orange-800 text-xs px-2 py-1 rounded-full">{highRisk.length}</span>
+            </h3>
+            {highRisk.length === 0 ? (
+              <p className="text-sm text-orange-400 italic">Sin riesgo a corto plazo.</p>
+            ) : (
+              <ul className="divide-y divide-orange-100/50 max-h-60 overflow-y-auto pr-1">
+                {highRisk.map(p => (
+                  <li key={p.id} className="py-2 flex justify-between items-start">
+                    <div>
+                      <p className="font-medium text-orange-900 text-sm leading-tight">
+                        {p.name} <span className="text-orange-500 font-normal text-xs ml-1">({p.counter})</span>
+                      </p>
+                      {p.brand && <p className="text-xs text-orange-700 opacity-80 mt-0.5">{p.brand}</p>}
+                    </div>
+                    <span className="font-bold text-orange-900 text-sm ml-2 bg-orange-100 px-1.5 py-0.5 rounded shrink-0">
+                      {p.units} un.
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {/* BLOQUE AMARILLO: Riesgo Medio (180 días) */}
+          <div className="bg-yellow-50 border border-yellow-100 rounded-xl p-4 shadow-sm">
+            <h3 className="font-semibold text-yellow-800 flex justify-between items-center mb-3">
+              <span>🟡 Riesgo Medio (6m)</span>
+              <span className="bg-yellow-200 text-yellow-800 text-xs px-2 py-1 rounded-full">{mediumRisk.length}</span>
+            </h3>
+            {mediumRisk.length === 0 ? (
+              <p className="text-sm text-yellow-500 italic">Sin riesgo a mediano plazo.</p>
+            ) : (
+              <ul className="divide-y divide-yellow-100/50 max-h-60 overflow-y-auto pr-1">
+                {mediumRisk.map(p => (
+                  <li key={p.id} className="py-2 flex justify-between items-start">
+                    <div>
+                      <p className="font-medium text-yellow-900 text-sm leading-tight">
+                        {p.name} <span className="text-yellow-600 font-normal text-xs ml-1">({p.counter})</span>
+                      </p>
+                      {p.brand && <p className="text-xs text-yellow-700 opacity-80 mt-0.5">{p.brand}</p>}
+                    </div>
+                    <span className="font-bold text-yellow-900 text-sm ml-2 bg-yellow-100 px-1.5 py-0.5 rounded shrink-0">
+                      {p.units} un.
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+        </div>
+      </div>
+
+      <div className="mt-8">
+        <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+          <PackageOpen className="w-5 h-5 text-gray-700" />
+          Ingresos Recientes
+        </h2>
       </div>
 
       {filteredPurchases.length === 0 ? (
