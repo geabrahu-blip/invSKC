@@ -522,6 +522,12 @@ export const getStockAdjustments = async (): Promise<StockAdjustment[]> => {
   return adjustments.sort((a, b) => b.createdAt - a.createdAt);
 };
 
+export const getStockEntries = async (): Promise<FinancialLot[]> => {
+  const q = query(collection(db, 'stock_entries'), orderBy('timestamp', 'desc'));
+  const querySnapshot = await getDocs(q);
+  return querySnapshot.docs.map(doc => doc.data() as FinancialLot);
+};
+
 export const syncOldProductsToInventory = async (): Promise<void> => {
   // Migrates all existing items from the 'inventory' collection to 'public_catalog'
   const allInventory = await getInventoryItems();
