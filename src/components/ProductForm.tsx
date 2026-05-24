@@ -198,7 +198,12 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
         <div className="col-span-1 md:col-span-2 lg:col-span-4 flex gap-4 items-start">
           <div className="w-24 h-24 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center bg-gray-50 overflow-hidden shrink-0">
             {image ? (
-              <img src={image} alt="Preview" className="w-full h-full object-cover" />
+              <img
+                src={image}
+                alt="Preview"
+                className="w-full h-full object-cover"
+                crossOrigin="anonymous"
+              />
             ) : (
               <ImageIcon className="h-8 w-8 text-gray-400" />
             )}
