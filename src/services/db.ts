@@ -7,7 +7,11 @@ import {
   deleteDoc,
   query,
   where,
-  limit
+  limit,
+  startAfter,
+  orderBy,
+  QueryDocumentSnapshot,
+  DocumentData
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { Purchase, Product, InventoryItem, User, StockAdjustment, PublicCatalogItem } from '../types';
@@ -245,6 +249,35 @@ export const getInventoryItems = async (): Promise<InventoryItem[]> => {
   const q = query(collection(db, 'inventory'));
   const querySnapshot = await getDocs(q);
   return querySnapshot.docs.map(doc => doc.data() as InventoryItem);
+};
+
+export const getPaginatedInventoryItems = async (
+  pageSize: number = 30,
+  lastVisibleDoc: QueryDocumentSnapshot<DocumentData, DocumentData> | null = null
+): Promise<{ items: InventoryItem[], lastDoc: QueryDocumentSnapshot<DocumentData, DocumentData> | null }> => {
+  let q = query(
+    collection(db, 'inventory'),
+    orderBy('name', 'asc'),
+    limit(pageSize)
+  );
+
+  if (lastVisibleDoc) {
+    q = query(
+      collection(db, 'inventory'),
+      orderBy('name', 'asc'),
+      startAfter(lastVisibleDoc),
+      limit(pageSize)
+    );
+  }
+
+  const querySnapshot = await getDocs(q);
+  const items = querySnapshot.docs.map(doc => doc.data() as InventoryItem);
+
+  const lastDoc = querySnapshot.docs.length > 0
+    ? querySnapshot.docs[querySnapshot.docs.length - 1]
+    : null;
+
+  return { items, lastDoc };
 };
 
 export const updateInventoryItem = async (item: InventoryItem): Promise<InventoryItem> => {
