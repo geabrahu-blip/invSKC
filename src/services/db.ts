@@ -15,7 +15,7 @@ import {
 } from 'firebase/firestore';
 import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 import { db, storage } from './firebase';
-import { Purchase, Product, InventoryItem, User, StockAdjustment, PublicCatalogItem } from '../types';
+import { Purchase, Product, InventoryItem, User, StockAdjustment, PublicCatalogItem, FinancialLot } from '../types';
 
 // Helper to get a random ID when not provided
 const generateId = () => doc(collection(db, 'dummy')).id;
@@ -212,6 +212,18 @@ export const deletePurchase = async (id: string): Promise<void> => {
 };
 
 // Products
+export const registerStockEntry = async (
+  entry: Omit<FinancialLot, 'id' | 'timestamp'>
+): Promise<void> => {
+  const id = generateId();
+  const financialLot: FinancialLot = {
+    ...entry,
+    id,
+    timestamp: Date.now(),
+  };
+  await setDoc(doc(db, 'stock_entries', id), financialLot);
+};
+
 export const getProductsByPurchaseId = async (purchaseId: string): Promise<Product[]> => {
   const q = query(collection(db, 'products'), where('purchaseId', '==', purchaseId));
   const querySnapshot = await getDocs(q);
@@ -258,6 +270,20 @@ export const addProduct = async (product: Omit<Product, 'id'>): Promise<Product>
 
     await setDoc(doc(db, 'inventory', existingInv.id), invToSave);
     await syncToPublicCatalog(invToSave);
+
+    // Registro financiero automático (RESTOCK)
+    if (newProduct.units > 0) {
+      await registerStockEntry({
+        type: 'RESTOCK',
+        productId: invToSave.id,
+        productName: invToSave.name,
+        addedUnits: newProduct.units,
+        unitCost: invToSave.priceBs,
+        totalInvestment: newProduct.units * invToSave.priceBs,
+        date: new Date().toISOString().split('T')[0]
+      });
+    }
+
   } else {
     // Create an initial inventory record in Bodega
     const invId = generateId();
@@ -284,6 +310,19 @@ export const addProduct = async (product: Omit<Product, 'id'>): Promise<Product>
 
     await setDoc(doc(db, 'inventory', invId), invToSave);
     await syncToPublicCatalog(invToSave);
+
+    // Registro financiero automático (NEW_PRODUCT)
+    if (newProduct.units > 0) {
+      await registerStockEntry({
+        type: 'NEW_PRODUCT',
+        productId: invId,
+        productName: invToSave.name,
+        addedUnits: newProduct.units,
+        unitCost: invToSave.priceBs,
+        totalInvestment: newProduct.units * invToSave.priceBs,
+        date: new Date().toISOString().split('T')[0]
+      });
+    }
   }
 
   return newProduct;
@@ -335,6 +374,19 @@ export const updateProduct = async (updatedProduct: Product): Promise<Product> =
 
     await setDoc(doc(db, 'inventory', existingInv.id), invToSave);
     await syncToPublicCatalog(invToSave);
+
+    // Registro financiero automático (RESTOCK en Actualización de Compra)
+    if (unitDifference > 0) {
+      await registerStockEntry({
+        type: 'RESTOCK',
+        productId: invToSave.id,
+        productName: invToSave.name,
+        addedUnits: unitDifference,
+        unitCost: invToSave.priceBs,
+        totalInvestment: unitDifference * invToSave.priceBs,
+        date: new Date().toISOString().split('T')[0]
+      });
+    }
   }
 
   return updatedProduct;
@@ -412,6 +464,9 @@ export const getPaginatedInventoryItems = async (
 };
 
 export const updateInventoryItem = async (item: InventoryItem): Promise<InventoryItem> => {
+  // Check old item to calculate unit differences for continuous ledger logging
+  const oldDocSnap = await getDoc(doc(db, 'inventory', item.id));
+
   let imageUrl = item.image;
   if (imageUrl) {
     imageUrl = await uploadImageToStorage(imageUrl, `inventory/${item.id}_${Date.now()}.webp`);
@@ -422,6 +477,24 @@ export const updateInventoryItem = async (item: InventoryItem): Promise<Inventor
 
   await setDoc(doc(db, 'inventory', itemToSave.id), itemToSave);
   await syncToPublicCatalog(itemToSave);
+
+  if (oldDocSnap.exists()) {
+    const oldItem = oldDocSnap.data() as InventoryItem;
+    const unitDifference = itemToSave.units - oldItem.units;
+
+    if (unitDifference > 0) {
+      await registerStockEntry({
+        type: 'RESTOCK',
+        productId: itemToSave.id,
+        productName: itemToSave.name,
+        addedUnits: unitDifference,
+        unitCost: itemToSave.priceBs, // Takes the latest cost defined by user
+        totalInvestment: unitDifference * itemToSave.priceBs,
+        date: new Date().toISOString().split('T')[0]
+      });
+    }
+  }
+
   return itemToSave;
 };
 
