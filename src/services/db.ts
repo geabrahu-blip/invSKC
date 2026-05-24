@@ -6,7 +6,8 @@ import {
   getDocs,
   deleteDoc,
   query,
-  where
+  where,
+  limit
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { Purchase, Product, InventoryItem, User, StockAdjustment, PublicCatalogItem } from '../types';
@@ -74,19 +75,47 @@ export const addPurchase = async (purchase: Omit<Purchase, 'id' | 'createdAt'>):
   return newPurchase;
 };
 
+// Helper para buscar directamente en Firestore sin bajar toda la colección
+const findExistingInventoryItem = async (product: { sku?: string, name: string, brand?: string, category?: string }): Promise<InventoryItem | null> => {
+  // Primero intentamos buscar por SKU, ya que es un identificador único exacto
+  if (product.sku) {
+    const qSku = query(
+      collection(db, 'inventory'),
+      where('storeId', '==', 'bodega'),
+      where('sku', '==', product.sku),
+      limit(1)
+    );
+    const snapSku = await getDocs(qSku);
+    if (!snapSku.empty) {
+      return snapSku.docs[0].data() as InventoryItem;
+    }
+  }
+
+  // Si no hay SKU o no se encontró, buscamos exactamente por Nombre, Marca y Categoría.
+  const qDetails = query(
+    collection(db, 'inventory'),
+    where('storeId', '==', 'bodega'),
+    where('name', '==', product.name.trim()),
+    where('brand', '==', product.brand || ''),
+    where('category', '==', product.category || ''),
+    limit(1)
+  );
+
+  const snapDetails = await getDocs(qDetails);
+  if (!snapDetails.empty) {
+    return snapDetails.docs[0].data() as InventoryItem;
+  }
+
+  return null;
+};
+
 export const deletePurchase = async (id: string): Promise<void> => {
   // 1. Get all products associated with this purchase
   const products = await getProductsByPurchaseId(id);
-  const allInventory = await getInventoryItems();
 
   // 2. Reverse inventory operations
   for (const product of products) {
-    const invItem = allInventory.find(item =>
-      item.storeId === 'bodega' &&
-      item.name.toLowerCase().trim() === product.name.toLowerCase().trim() &&
-      (item.brand || '') === (product.brand || '') &&
-      (item.category || '') === (product.category || '')
-    );
+    const invItem = await findExistingInventoryItem(product);
 
     if (invItem) {
       const newUnits = Math.max(0, invItem.units - product.units);
@@ -124,15 +153,7 @@ export const addProduct = async (product: Omit<Product, 'id'>): Promise<Product>
   await setDoc(doc(db, 'products', id), newProduct);
 
   // Look for existing product in Bodega to merge stock instead of duplicate
-  const allInventory = await getInventoryItems();
-  const existingInv = allInventory.find(item => {
-    if (newProduct.sku && item.sku === newProduct.sku) return true;
-
-    return item.storeId === 'bodega' &&
-           item.name.toLowerCase().trim() === newProduct.name.toLowerCase().trim() &&
-           (item.brand || '') === (newProduct.brand || '') &&
-           (item.category || '') === (newProduct.category || '')
-  });
+  const existingInv = await findExistingInventoryItem(newProduct);
 
   if (existingInv) {
     // Update existing inventory item (add units, update prices to latest)
@@ -188,14 +209,7 @@ export const updateProduct = async (updatedProduct: Product): Promise<Product> =
   await setDoc(doc(db, 'products', updatedProduct.id), updatedProduct);
 
   // We must update the inventory item in Bodega
-  const allInventory = await getInventoryItems();
-  const existingInv = allInventory.find(item => {
-    if (oldProduct.sku && item.sku === oldProduct.sku) return true;
-    return item.storeId === 'bodega' &&
-           item.name.toLowerCase().trim() === oldProduct.name.toLowerCase().trim() &&
-           (item.brand || '') === (oldProduct.brand || '') &&
-           (item.category || '') === (oldProduct.category || '');
-  });
+  const existingInv = await findExistingInventoryItem(oldProduct);
 
   if (existingInv) {
     const unitDifference = updatedProduct.units - oldProduct.units;
