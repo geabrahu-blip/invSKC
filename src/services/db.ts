@@ -13,7 +13,8 @@ import {
   QueryDocumentSnapshot,
   DocumentData
 } from 'firebase/firestore';
-import { db } from './firebase';
+import { ref, uploadString, getDownloadURL } from 'firebase/storage';
+import { db, storage } from './firebase';
 import { Purchase, Product, InventoryItem, User, StockAdjustment, PublicCatalogItem } from '../types';
 
 // Helper to get a random ID when not provided
@@ -77,6 +78,17 @@ export const addPurchase = async (purchase: Omit<Purchase, 'id' | 'createdAt'>):
   };
   await setDoc(doc(db, 'purchases', id), newPurchase);
   return newPurchase;
+};
+
+// Helper to upload base64 images to Firebase Storage
+const uploadImageToStorage = async (base64String: string, pathRef: string): Promise<string> => {
+  // Only upload if it's a data url, otherwise assume it's already a public URL or empty
+  if (!base64String || !base64String.startsWith('data:image')) {
+    return base64String;
+  }
+  const imageRef = ref(storage, pathRef);
+  await uploadString(imageRef, base64String, 'data_url');
+  return await getDownloadURL(imageRef);
 };
 
 // Helper para buscar directamente en Firestore sin bajar toda la colección
@@ -153,7 +165,13 @@ export const getProductsByPurchaseId = async (purchaseId: string): Promise<Produ
 
 export const addProduct = async (product: Omit<Product, 'id'>): Promise<Product> => {
   const id = generateId();
-  const newProduct: Product = { ...product, id };
+
+  let imageUrl = product.image;
+  if (imageUrl) {
+    imageUrl = await uploadImageToStorage(imageUrl, `products/${id}_${Date.now()}.webp`);
+  }
+
+  const newProduct: Product = { ...product, id, image: imageUrl };
   await setDoc(doc(db, 'products', id), newProduct);
 
   // Look for existing product in Bodega to merge stock instead of duplicate
@@ -209,8 +227,14 @@ export const updateProduct = async (updatedProduct: Product): Promise<Product> =
   if (!docSnap.exists()) throw new Error("Producto original no encontrado");
   const oldProduct = docSnap.data() as Product;
 
+  let imageUrl = updatedProduct.image;
+  if (imageUrl && imageUrl.startsWith('data:image')) {
+    imageUrl = await uploadImageToStorage(imageUrl, `products/${updatedProduct.id}_${Date.now()}.webp`);
+  }
+  const productToSave = { ...updatedProduct, image: imageUrl };
+
   // Save updated product record
-  await setDoc(doc(db, 'products', updatedProduct.id), updatedProduct);
+  await setDoc(doc(db, 'products', productToSave.id), productToSave);
 
   // We must update the inventory item in Bodega
   const existingInv = await findExistingInventoryItem(oldProduct);
@@ -281,9 +305,15 @@ export const getPaginatedInventoryItems = async (
 };
 
 export const updateInventoryItem = async (item: InventoryItem): Promise<InventoryItem> => {
-  await setDoc(doc(db, 'inventory', item.id), item);
-  await syncToPublicCatalog(item);
-  return item;
+  let imageUrl = item.image;
+  if (imageUrl && imageUrl.startsWith('data:image')) {
+    imageUrl = await uploadImageToStorage(imageUrl, `inventory/${item.id}_${Date.now()}.webp`);
+  }
+  const itemToSave = { ...item, image: imageUrl };
+
+  await setDoc(doc(db, 'inventory', itemToSave.id), itemToSave);
+  await syncToPublicCatalog(itemToSave);
+  return itemToSave;
 };
 
 export const deleteInventoryItem = async (id: string): Promise<void> => {
