@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { InventoryItem } from '../types';
 import { getPaginatedInventoryItems, syncOldProductsToInventory, deleteInventoryItem, updateInventoryItem, addStockAdjustment } from '../services/db';
-import { Package, Search, Trash2, Edit2, Archive, Layers, PenTool, Image as ImageIcon } from 'lucide-react';
+import { Package, Search, Trash2, Edit2, Archive, Layers, PenTool, Image as ImageIcon, AlertTriangle } from 'lucide-react';
 import { QueryDocumentSnapshot, DocumentData } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -376,8 +376,11 @@ const Inventory = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {products.map((product) => (
-                <tr key={product.id} className="hover:bg-gray-50">
+              {products.map((product) => {
+                const isCritical = product.minStock !== undefined && product.units <= product.minStock;
+
+                return (
+                <tr key={product.id} className={`hover:bg-gray-50 transition-colors ${isCritical ? 'bg-red-50/40' : ''}`}>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       <div className="h-10 w-10 bg-gray-100 rounded overflow-hidden">
@@ -397,8 +400,18 @@ const Inventory = () => {
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-center font-medium text-lg">
-                    {product.units}
+                  <td className="px-6 py-4 text-center">
+                    {isCritical ? (
+                      <div className="flex flex-col items-center justify-center">
+                        <span className="flex items-center gap-1 font-bold text-red-600 text-lg">
+                          <AlertTriangle className="w-4 h-4" />
+                          {product.units}
+                        </span>
+                        <span className="text-xs text-red-500 font-medium">Mín: {product.minStock}</span>
+                      </div>
+                    ) : (
+                      <span className="font-medium text-gray-900 text-lg">{product.units}</span>
+                    )}
                   </td>
                   <td className="px-6 py-4 text-center">
                     {product.expirationDate ? (
@@ -447,7 +460,8 @@ const Inventory = () => {
                     </div>
                   </td>
                 </tr>
-              ))}
+                );
+              })}
               {products.length === 0 && !isSearching && (
                 <tr>
                   <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
