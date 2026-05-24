@@ -136,7 +136,12 @@ const Inventory = () => {
     if (!selectedProduct || !editForm.name) return;
 
     try {
-      await updateInventoryItem(editForm as InventoryItem);
+      const cleanedForm = {
+        ...editForm,
+        image: editForm.image ? editForm.image.trim() : ''
+      };
+
+      await updateInventoryItem(cleanedForm as InventoryItem);
       setIsEditModalOpen(false);
       success('Detalles del producto actualizados correctamente.');
       loadData();
@@ -153,6 +158,7 @@ const Inventory = () => {
     const reader = new FileReader();
     reader.onload = (event) => {
       const img = new Image();
+      img.crossOrigin = "anonymous";
       img.onload = () => {
         const canvas = document.createElement('canvas');
         const MAX_WIDTH = 800;
@@ -615,7 +621,12 @@ const Inventory = () => {
               <div className="flex gap-4 items-start mb-6">
                 <div className="w-24 h-24 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center bg-gray-50 overflow-hidden shrink-0">
                   {editForm.image ? (
-                    <img src={editForm.image} alt="Preview" className="w-full h-full object-cover" />
+                    <img
+                      src={editForm.image}
+                      alt="Preview"
+                      className="w-full h-full object-cover"
+                      crossOrigin="anonymous"
+                    />
                   ) : (
                     <ImageIcon className="h-8 w-8 text-gray-400" />
                   )}
