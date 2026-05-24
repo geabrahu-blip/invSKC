@@ -15,7 +15,6 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
   const [name, setName] = useState('');
   const [brand, setBrand] = useState('');
   const [category, setCategory] = useState('');
-  const [gender, setGender] = useState('');
   const [presentation, setPresentation] = useState('');
   const [expirationDate, setExpirationDate] = useState('');
   const [sku, setSku] = useState('');
@@ -53,7 +52,6 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
       setName(editingProduct.name);
       setBrand(editingProduct.brand || '');
       setCategory(editingProduct.category || '');
-      setGender(editingProduct.gender || '');
       setPresentation(editingProduct.presentation || '');
       setExpirationDate(editingProduct.expirationDate || '');
       setSku(editingProduct.sku || '');
@@ -72,7 +70,6 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
     setName('');
     setBrand('');
     setCategory('');
-    setGender('');
     setPresentation('');
     setExpirationDate('');
     setSku('');
@@ -87,7 +84,6 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
     setName(item.name);
     setBrand(item.brand || '');
     setCategory(item.category || '');
-    setGender(item.gender || '');
     setPresentation(item.presentation || '');
     setSku(item.sku || '');
     setPriceBs(item.priceBs);
@@ -98,8 +94,15 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
     setShowSuggestions(false);
   };
 
-  const uniqueBrands = Array.from(new Set(existingItems.map(i => i.brand).filter(Boolean)));
-  const uniqueCategories = Array.from(new Set(existingItems.map(i => i.category).filter(Boolean)));
+  const topSkincareBrands = [
+    "La Roche-Posay", "Eucerin", "CeraVe", "The Ordinary",
+    "Vichy", "ISDIN", "L'Oréal Paris", "Neutrogena"
+  ];
+
+  const uniqueBrands = Array.from(new Set([
+    ...topSkincareBrands,
+    ...existingItems.map(i => i.brand).filter(Boolean) as string[]
+  ]));
 
   const filteredSuggestions = name.length > 1
     ? existingItems.filter(i => i.name.toLowerCase().includes(name.toLowerCase()) || (i.sku && i.sku.includes(name)))
@@ -157,7 +160,6 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
       name,
       brand,
       category,
-      gender,
       presentation: presentation || undefined,
       expirationDate: expirationDate || undefined,
       sku: sku || undefined,
@@ -246,7 +248,7 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
             }}
             onFocus={() => setShowSuggestions(true)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-            placeholder="Busca por nombre o código..."
+            placeholder="Ej. Effaclar Gel Purificante Moussant"
           />
           {showSuggestions && filteredSuggestions.length > 0 && (
             <div className="absolute z-10 w-full mt-1 bg-white shadow-lg rounded-md border border-gray-200 max-h-60 overflow-y-auto">
@@ -278,42 +280,30 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
             onChange={(e) => setBrand(e.target.value)}
             list="brands-list"
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-            placeholder="Ej. Carolina Herrera"
+            placeholder="Ej. La Roche-Posay"
           />
           <datalist id="brands-list">
             {uniqueBrands.map((b, i) => <option key={i} value={b} />)}
           </datalist>
         </div>
 
-        <div className="col-span-1">
-          <label htmlFor="prod-category" className="block text-sm font-medium text-gray-700 mb-1">Categoría (Opcional)</label>
-          <input
+        <div className="col-span-1 md:col-span-2">
+          <label htmlFor="prod-category" className="block text-sm font-medium text-gray-700 mb-1">Categoría Skincare</label>
+          <select
             id="prod-category"
-            type="text"
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            list="categories-list"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-            placeholder="Ej. EDP, EDT, Splash"
-          />
-          <datalist id="categories-list">
-            {uniqueCategories.map((c, i) => <option key={i} value={c} />)}
-          </datalist>
-        </div>
-
-        <div className="col-span-1">
-          <label htmlFor="prod-gender" className="block text-sm font-medium text-gray-700 mb-1">Público / Género</label>
-          <select
-            id="prod-gender"
-            value={gender}
-            onChange={(e) => setGender(e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
-            <option value="">Seleccionar...</option>
-            <option value="Mujer">Mujer</option>
-            <option value="Varón">Varón</option>
-            <option value="Unisex">Unisex</option>
-            <option value="Bebé">Bebé</option>
+            <option value="">Seleccionar categoría...</option>
+            <option value="Limpiadores / Gel Limpiador">Limpiadores / Gel Limpiador</option>
+            <option value="Sérums / Tratamientos">Sérums / Tratamientos</option>
+            <option value="Hidratantes / Cremas">Hidratantes / Cremas</option>
+            <option value="Protectores Solares / Fotoprotección">Protectores Solares / Fotoprotección</option>
+            <option value="Tónicos / Esencias">Tónicos / Esencias</option>
+            <option value="Contorno de Ojos">Contorno de Ojos</option>
+            <option value="Cuidado Corporal / Body Milk">Cuidado Corporal / Body Milk</option>
+            <option value="Otros">Otros...</option>
           </select>
         </div>
 
@@ -325,7 +315,7 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
             value={presentation}
             onChange={(e) => setPresentation(e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-            placeholder="Ej. 236ml"
+            placeholder="Ej. 236ml, 50g"
           />
         </div>
 
