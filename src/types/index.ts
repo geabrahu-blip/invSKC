@@ -26,6 +26,7 @@ export interface Product {
   expirationDate?: string; // YYYY-MM-DD
   presentation?: string; // e.g. '236ml', '400g'
   sku?: string; // Barcode or custom SKU for faster matching
+  minStock?: number; // Minimum stock threshold for reorder alerts
 }
 
 export interface InventoryItem {
@@ -46,6 +47,7 @@ export interface InventoryItem {
   priceBs: number;
   wholesalePrice: number;
   sellingPrice: number;
+  minStock?: number; // Minimum stock threshold for reorder alerts
 }
 
 export interface PublicCatalogItem {
