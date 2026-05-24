@@ -131,9 +131,19 @@ const uploadImageToStorage = async (base64String: string, pathRef: string): Prom
     return base64String;
   }
 
-  const imageRef = ref(storage, pathRef);
-  await uploadString(imageRef, base64String, 'data_url');
-  return await getDownloadURL(imageRef);
+  // Configurar timeout agresivo para evitar congelamientos por reintentos de CORS del SDK
+  storage.maxUploadRetryTime = 1000;
+  storage.maxOperationRetryTime = 1000;
+
+  try {
+    const imageRef = ref(storage, pathRef);
+    await uploadString(imageRef, base64String, 'data_url');
+    return await getDownloadURL(imageRef);
+  } catch (error) {
+    // Si la subida falla (CORS, red, etc), capturamos el error rápido y usamos fallback
+    console.error("Storage upload aborted (CORS/Timeout). Falling back to Base64:", error);
+    return base64String;
+  }
 };
 
 // Helper para buscar directamente en Firestore sin bajar toda la colección
