@@ -23,6 +23,7 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
   const [units, setUnits] = useState<number | ''>('');
   const [wholesalePrice, setWholesalePrice] = useState<number | ''>('');
   const [sellingPrice, setSellingPrice] = useState<number | ''>('');
+  const [minStock, setMinStock] = useState<number | ''>('');
 
   const [existingItems, setExistingItems] = useState<InventoryItem[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -60,6 +61,7 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
       setUnits(editingProduct.units);
       setWholesalePrice(editingProduct.wholesalePrice);
       setSellingPrice(editingProduct.sellingPrice);
+      setMinStock(editingProduct.minStock ?? '');
     } else {
       resetForm();
     }
@@ -78,6 +80,7 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
     setUnits('');
     setWholesalePrice('');
     setSellingPrice('');
+    setMinStock('');
   };
 
   const handleSuggestionSelect = (item: InventoryItem) => {
@@ -90,6 +93,7 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
     setPriceBs(item.priceBs);
     setWholesalePrice(item.wholesalePrice);
     setSellingPrice(item.sellingPrice);
+    if (item.minStock !== undefined) setMinStock(item.minStock);
     if (item.image) setImage(item.image);
     setShowSuggestions(false);
   };
@@ -163,6 +167,7 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
       wholesalePrice: Number(wholesalePrice),
       sellingPrice: Number(sellingPrice),
       totalPrice,
+      minStock: minStock !== '' ? Number(minStock) : undefined,
     });
 
     resetForm();
@@ -327,6 +332,19 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
             value={expirationDate}
             onChange={(e) => setExpirationDate(e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 text-gray-700"
+          />
+        </div>
+
+        <div className="col-span-1">
+          <label htmlFor="prod-min-stock" className="block text-sm font-medium text-gray-700 mb-1">Stock Mínimo (Alerta)</label>
+          <input
+            id="prod-min-stock"
+            type="number"
+            min="0"
+            value={minStock}
+            onChange={(e) => setMinStock(e.target.value !== '' ? Number(e.target.value) : '')}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 bg-orange-50"
+            placeholder="Ej. 5"
           />
         </div>
 
