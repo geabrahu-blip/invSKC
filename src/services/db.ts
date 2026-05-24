@@ -334,6 +334,23 @@ export const getInventoryItems = async (): Promise<InventoryItem[]> => {
   return querySnapshot.docs.map(doc => doc.data() as InventoryItem);
 };
 
+// Helper para obtener productos con riesgo de vencimiento (FEFO)
+export const getExpiringProducts = async (limitCount: number = 30): Promise<InventoryItem[]> => {
+  const q = query(
+    collection(db, 'inventory'),
+    where('storeId', '==', 'bodega'),
+    where('expirationDate', '!=', ''), // Excluir productos sin fecha asignada
+    orderBy('expirationDate', 'asc'),  // Ordenar: Los más próximos a vencer primero
+    limit(limitCount)
+  );
+
+  const querySnapshot = await getDocs(q);
+  const items = querySnapshot.docs.map(doc => doc.data() as InventoryItem);
+
+  // Filtramos localmente productos cuyo stock ya es 0 para evitar pedir un índice compuesto en Firestore
+  return items.filter(item => item.expirationDate && item.units > 0);
+};
+
 export const getPaginatedInventoryItems = async (
   pageSize: number = 30,
   lastVisibleDoc: QueryDocumentSnapshot<DocumentData, DocumentData> | null = null,
