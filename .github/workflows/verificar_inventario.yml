@@ -17,13 +17,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 18
-          # Eliminamos la línea de cache para evitar que arrastre binarios incorrectos
 
       - name: Instalar dependencias
         run: |
-          rm -f package-lock.json
           npm install
-          npm rebuild @tailwindcss/oxide
+          npm install @tailwindcss/oxide-linux-x64-gnu
 
       - name: Compilar aplicación
         run: npm run build
