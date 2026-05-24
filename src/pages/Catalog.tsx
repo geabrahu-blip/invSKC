@@ -67,15 +67,15 @@ export default function Catalog() {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {filteredProducts.map(product => (
             <div key={product.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow flex flex-col h-full">
-              <div className="aspect-square bg-gray-50 relative border-b border-gray-100 flex items-center justify-center p-4">
+              <div className="aspect-square w-full bg-white relative border-b border-gray-100 flex items-center justify-center overflow-hidden shrink-0">
                 {product.image ? (
-                  <img src={product.image} alt={product.name} className="w-full h-full object-contain" />
+                  <img src={product.image} alt={product.name} className="w-full h-full object-contain p-2" />
                 ) : (
                   <ImageIcon className="h-12 w-12 text-gray-300" />
                 )}
 
                 <div className="absolute top-2 right-2">
-                  <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-bold ${
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-bold shadow-sm ${
                     product.units > 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
                   }`}>
                     Stock: {product.units}
@@ -83,36 +83,34 @@ export default function Catalog() {
                 </div>
               </div>
 
-              <div className="p-4 flex flex-col flex-1">
-                <div className="flex-1 mb-4">
-                  <div className="flex items-start justify-between gap-2 mb-1">
-                    <h3 className="font-semibold text-gray-900 leading-tight line-clamp-2" title={product.name}>
-                      {product.name}
-                    </h3>
-                  </div>
+              <div className="p-4 flex flex-col flex-grow">
+                <div className="mb-3">
+                  <h3 className="font-semibold text-gray-900 leading-snug line-clamp-2 h-10" title={product.name}>
+                    {product.name}
+                  </h3>
+                </div>
 
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    {product.brand && (
-                      <span className="inline-flex items-center text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
-                        <Tags className="w-3 h-3 mr-1" />
-                        {product.brand}
-                      </span>
-                    )}
-                    {product.presentation && (
-                      <span className="inline-flex items-center text-xs font-medium text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded">
-                        {product.presentation}
-                      </span>
-                    )}
-                  </div>
+                <div className="flex flex-wrap gap-1 mb-4">
+                  {product.brand && (
+                    <span className="inline-flex items-center text-[11px] font-medium text-gray-600 bg-gray-100 px-1.5 py-0.5 rounded">
+                      <Tags className="w-3 h-3 mr-1" />
+                      {product.brand}
+                    </span>
+                  )}
+                  {product.presentation && (
+                    <span className="inline-flex items-center text-[11px] font-medium text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded">
+                      {product.presentation}
+                    </span>
+                  )}
                 </div>
 
                 <div className="pt-3 border-t border-gray-100 mt-auto space-y-1.5">
                   <div className="flex justify-between items-center text-sm">
-                    <span className="text-gray-500">Por Mayor</span>
+                    <span className="text-gray-500 text-xs uppercase tracking-wider font-medium">Por Mayor</span>
                     <span className="font-semibold text-blue-600">Bs. {product.wholesalePrice.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between items-center text-sm">
-                    <span className="text-gray-500">Unidad</span>
+                    <span className="text-gray-500 text-xs uppercase tracking-wider font-medium">Unidad</span>
                     <span className="font-bold text-emerald-600 text-base">Bs. {product.sellingPrice.toFixed(2)}</span>
                   </div>
                 </div>
