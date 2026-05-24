@@ -19,8 +19,10 @@ jobs:
           node-version: 18
           cache: 'npm'
 
-      - name: Instalar dependencias
-        run: npm install
+     - name: Instalar dependencias
+        run: |
+          rm -f package-lock.json
+          npm install
 
       - name: Compilar aplicación
         run: npm run build
