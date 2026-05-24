@@ -18,6 +18,7 @@ const Inventory = () => {
   const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot<DocumentData, DocumentData> | null>(null);
   const [hasMore, setHasMore] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
 
   // Stock adjustment state
   const [selectedProduct, setSelectedProduct] = useState<InventoryItem | null>(null);
@@ -31,9 +32,14 @@ const Inventory = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editForm, setEditForm] = useState<Partial<InventoryItem>>({});
 
+  // Debounce search effect
   useEffect(() => {
-    loadData();
-  }, []);
+    const delayDebounceFn = setTimeout(() => {
+      loadData(true);
+    }, 500); // Wait 500ms after user stops typing to trigger search
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchTerm, sortOrder]); // Re-fetch if search term or sort order changes
 
   const handleSyncCatalog = async () => {
     setIsSyncing(true);
@@ -48,19 +54,56 @@ const Inventory = () => {
     }
   };
 
-  const loadData = async () => {
-    const { items, lastDoc: newLastDoc } = await getPaginatedInventoryItems(30, null);
-    setProducts(items);
-    setLastDoc(newLastDoc);
-    setHasMore(newLastDoc !== null && items.length === 30);
+  const loadData = async (reset: boolean = false) => {
+    if (reset) {
+      setIsSearching(true);
+      setLastDoc(null); // Reset cursor on new search
+      setProducts([]); // Clear current list
+    }
+
+    try {
+      const { items, lastDoc: newLastDoc } = await getPaginatedInventoryItems(30, null, searchTerm);
+
+      let finalItems = items;
+      // Si hay un término de búsqueda, Firestore no nos dejó ordenar con orderBy('name') sin un índice compuesto.
+      // Hacemos un sort en memoria de los resultados devueltos (son máximo 30 o la página actual)
+      if (searchTerm) {
+         finalItems = items.sort((a,b) => {
+             // Aplicamos también la lógica del select manual de sortOrder si lo desean
+             if (sortOrder === 'desc') return b.units - a.units;
+             return a.units - b.units;
+         });
+      } else {
+         if (sortOrder === 'desc') {
+             finalItems = items.sort((a,b) => b.units - a.units);
+         }
+      }
+
+      setProducts(finalItems);
+      setLastDoc(newLastDoc);
+      setHasMore(newLastDoc !== null && items.length === 30);
+    } catch (error) {
+       console.error("Error loading data:", error);
+    } finally {
+      if (reset) setIsSearching(false);
+    }
   };
 
   const handleLoadMore = async () => {
     if (!lastDoc || isLoadingMore) return;
     setIsLoadingMore(true);
     try {
-      const { items, lastDoc: newLastDoc } = await getPaginatedInventoryItems(30, lastDoc);
-      setProducts(prev => [...prev, ...items]);
+      const { items, lastDoc: newLastDoc } = await getPaginatedInventoryItems(30, lastDoc, searchTerm);
+
+      let finalItems = items;
+      if (searchTerm || sortOrder !== 'asc') {
+         finalItems = items.sort((a,b) => {
+             if (sortOrder === 'desc') return b.units - a.units;
+             return a.units - b.units;
+         });
+      }
+
+      setProducts(prev => [...prev, ...finalItems]);
       setLastDoc(newLastDoc);
       setHasMore(newLastDoc !== null && items.length === 30);
     } catch (err) {
@@ -198,21 +241,10 @@ const Inventory = () => {
     }
   };
 
-  const filteredProducts = products.filter(p =>
-    p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (p.brand && p.brand.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (p.category && p.category.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (p.gender && p.gender.toLowerCase().includes(searchTerm.toLowerCase()))
-  ).sort((a, b) => {
-    if (sortOrder === 'desc') {
-      return b.units - a.units;
-    } else {
-      return a.units - b.units;
-    }
-  });
-
-  const totalProducts = filteredProducts.length;
-  const totalUnits = filteredProducts.reduce((sum, item) => sum + item.units, 0);
+  // Eliminamos filteredProducts ya que todo lo maneja el servidor ahora
+  // Usamos el arreglo de productos directamente.
+  const totalProducts = products.length; // Este será el total de la página cargada
+  const totalUnits = products.reduce((sum, item) => sum + item.units, 0);
 
   const getExpirationStatus = (dateString?: string) => {
     if (!dateString) return null;
@@ -344,7 +376,7 @@ const Inventory = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {filteredProducts.map((product) => (
+              {products.map((product) => (
                 <tr key={product.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
@@ -416,10 +448,17 @@ const Inventory = () => {
                   </td>
                 </tr>
               ))}
-              {filteredProducts.length === 0 && (
+              {products.length === 0 && !isSearching && (
                 <tr>
                   <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
                     No se encontraron productos en el inventario.
+                  </td>
+                </tr>
+              )}
+              {isSearching && (
+                <tr>
+                  <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
+                    Buscando productos...
                   </td>
                 </tr>
               )}

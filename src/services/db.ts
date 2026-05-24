@@ -80,6 +80,44 @@ export const addPurchase = async (purchase: Omit<Purchase, 'id' | 'createdAt'>):
   return newPurchase;
 };
 
+// Helper para generar palabras clave de búsqueda (prefijos para auto-completado)
+const generateSearchKeywords = (product: { name: string, brand?: string, sku?: string, category?: string }): string[] => {
+  const keywords = new Set<string>();
+
+  const fieldsToTokenize = [
+    product.name,
+    product.brand,
+    product.sku,
+    product.category
+  ];
+
+  fieldsToTokenize.forEach(field => {
+    if (!field) return;
+
+    // Limpiamos y dividimos en palabras en minúsculas
+    const words = field.toLowerCase().trim().split(/[\s\-_]+/);
+
+    words.forEach(word => {
+      // Evitar guardar prefijos de palabras muy cortas como conectores
+      if (word.length === 0) return;
+
+      keywords.add(word);
+
+      // Generar prefijos letra a letra (ej: c, ce, cer, cera, cerav, cerave)
+      let prefix = '';
+      for (const char of word) {
+        prefix += char;
+        keywords.add(prefix);
+      }
+    });
+
+    // Guardar también la frase completa por si la buscan exacta
+    keywords.add(field.toLowerCase().trim());
+  });
+
+  return Array.from(keywords);
+};
+
 // Helper to upload base64 images to Firebase Storage
 const uploadImageToStorage = async (base64String: string, pathRef: string): Promise<string> => {
   // Only upload if it's a data url, otherwise assume it's already a public URL or empty
@@ -172,7 +210,12 @@ export const addProduct = async (product: Omit<Product, 'id'>): Promise<Product>
   }
 
   const newProduct: Product = { ...product, id, image: imageUrl };
-  await setDoc(doc(db, 'products', id), newProduct);
+
+  // Generar y adjuntar palabras clave para búsquedas en la BD
+  const searchKeywords = generateSearchKeywords(newProduct);
+  const productToSave = { ...newProduct, searchKeywords };
+
+  await setDoc(doc(db, 'products', id), productToSave);
 
   // Look for existing product in Bodega to merge stock instead of duplicate
   const existingInv = await findExistingInventoryItem(newProduct);
@@ -191,8 +234,12 @@ export const addProduct = async (product: Omit<Product, 'id'>): Promise<Product>
       sku: newProduct.sku || existingInv.sku,
       image: newProduct.image || existingInv.image // update image if new one provided
     };
-    await setDoc(doc(db, 'inventory', existingInv.id), updatedInv);
-    await syncToPublicCatalog(updatedInv);
+    // Asegurarnos de actualizar las searchKeywords también en el inventario
+    const invKeywords = generateSearchKeywords(updatedInv);
+    const invToSave = { ...updatedInv, searchKeywords: invKeywords };
+
+    await setDoc(doc(db, 'inventory', existingInv.id), invToSave);
+    await syncToPublicCatalog(invToSave);
   } else {
     // Create an initial inventory record in Bodega
     const invId = generateId();
@@ -213,8 +260,11 @@ export const addProduct = async (product: Omit<Product, 'id'>): Promise<Product>
       wholesalePrice: newProduct.wholesalePrice,
       sellingPrice: newProduct.sellingPrice
     };
-    await setDoc(doc(db, 'inventory', invId), invItem);
-    await syncToPublicCatalog(invItem);
+    const invKeywords = generateSearchKeywords(invItem);
+    const invToSave = { ...invItem, searchKeywords: invKeywords };
+
+    await setDoc(doc(db, 'inventory', invId), invToSave);
+    await syncToPublicCatalog(invToSave);
   }
 
   return newProduct;
@@ -231,7 +281,9 @@ export const updateProduct = async (updatedProduct: Product): Promise<Product> =
   if (imageUrl && imageUrl.startsWith('data:image')) {
     imageUrl = await uploadImageToStorage(imageUrl, `products/${updatedProduct.id}_${Date.now()}.webp`);
   }
-  const productToSave = { ...updatedProduct, image: imageUrl };
+
+  const searchKeywords = generateSearchKeywords(updatedProduct);
+  const productToSave = { ...updatedProduct, image: imageUrl, searchKeywords };
 
   // Save updated product record
   await setDoc(doc(db, 'products', productToSave.id), productToSave);
@@ -257,8 +309,12 @@ export const updateProduct = async (updatedProduct: Product): Promise<Product> =
       sellingPrice: updatedProduct.sellingPrice,
       units: Math.max(0, existingInv.units + unitDifference), // Avoid negative inventory
     };
-    await setDoc(doc(db, 'inventory', existingInv.id), updatedInv);
-    await syncToPublicCatalog(updatedInv);
+
+    const invKeywords = generateSearchKeywords(updatedInv);
+    const invToSave = { ...updatedInv, searchKeywords: invKeywords };
+
+    await setDoc(doc(db, 'inventory', existingInv.id), invToSave);
+    await syncToPublicCatalog(invToSave);
   }
 
   return updatedProduct;
@@ -277,18 +333,32 @@ export const getInventoryItems = async (): Promise<InventoryItem[]> => {
 
 export const getPaginatedInventoryItems = async (
   pageSize: number = 30,
-  lastVisibleDoc: QueryDocumentSnapshot<DocumentData, DocumentData> | null = null
+  lastVisibleDoc: QueryDocumentSnapshot<DocumentData, DocumentData> | null = null,
+  searchTerm: string = ''
 ): Promise<{ items: InventoryItem[], lastDoc: QueryDocumentSnapshot<DocumentData, DocumentData> | null }> => {
+  let baseQueryConstraints: any[] = [];
+
+  if (searchTerm) {
+    const cleanTerm = searchTerm.toLowerCase().trim();
+    // Cuando usamos array-contains, Firestore no requiere orderBy para funcionar,
+    // de hecho, si hay un orderBy en un campo distinto puede pedir índices compuestos.
+    // Para simplificar, ordenamos en memoria si hay búsqueda.
+    baseQueryConstraints.push(where('searchKeywords', 'array-contains', cleanTerm));
+  } else {
+    // Si no hay búsqueda, ordenamos alfabéticamente
+    baseQueryConstraints.push(orderBy('name', 'asc'));
+  }
+
   let q = query(
     collection(db, 'inventory'),
-    orderBy('name', 'asc'),
+    ...baseQueryConstraints,
     limit(pageSize)
   );
 
   if (lastVisibleDoc) {
     q = query(
       collection(db, 'inventory'),
-      orderBy('name', 'asc'),
+      ...baseQueryConstraints,
       startAfter(lastVisibleDoc),
       limit(pageSize)
     );
@@ -309,7 +379,9 @@ export const updateInventoryItem = async (item: InventoryItem): Promise<Inventor
   if (imageUrl && imageUrl.startsWith('data:image')) {
     imageUrl = await uploadImageToStorage(imageUrl, `inventory/${item.id}_${Date.now()}.webp`);
   }
-  const itemToSave = { ...item, image: imageUrl };
+
+  const searchKeywords = generateSearchKeywords(item);
+  const itemToSave = { ...item, image: imageUrl, searchKeywords };
 
   await setDoc(doc(db, 'inventory', itemToSave.id), itemToSave);
   await syncToPublicCatalog(itemToSave);
