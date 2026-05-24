@@ -161,7 +161,7 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
       presentation: presentation || undefined,
       expirationDate: expirationDate || undefined,
       sku: sku || undefined,
-      image,
+      image: image ? image.trim() : '',
       priceBs: Number(priceBs),
       units: Number(units),
       wholesalePrice: Number(wholesalePrice),
