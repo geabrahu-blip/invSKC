@@ -118,6 +118,28 @@ const generateSearchKeywords = (product: { name: string, brand?: string, sku?: s
   return Array.from(keywords);
 };
 
+// Helper to remove undefined properties and convert undefined strings to empty strings for Firestore compatibility
+const sanitizeForFirestore = <T extends Record<string, any>>(obj: T): T => {
+  const sanitized = { ...obj };
+
+  // Convert known optional string fields to "" if undefined
+  const stringFields = ['sku', 'brand', 'category', 'presentation', 'expirationDate', 'gender'];
+  stringFields.forEach(field => {
+    if (sanitized[field] === undefined) {
+      (sanitized as any)[field] = "";
+    }
+  });
+
+  // Remove completely undefined numeric or complex fields to prevent crash
+  Object.keys(sanitized).forEach(key => {
+    if (sanitized[key] === undefined) {
+      delete sanitized[key];
+    }
+  });
+
+  return sanitized;
+};
+
 // Helper to upload base64 images to Firebase Storage
 const uploadImageToStorage = async (base64String: string, pathRef: string): Promise<string> => {
   // Defensive bypass: If it's already a public URL or empty, short-circuit immediately.
@@ -242,7 +264,7 @@ export const addProduct = async (product: Omit<Product, 'id'>): Promise<Product>
 
   // Generar y adjuntar palabras clave para búsquedas en la BD
   const searchKeywords = generateSearchKeywords(newProduct);
-  const productToSave = { ...newProduct, searchKeywords };
+  const productToSave = sanitizeForFirestore({ ...newProduct, searchKeywords });
 
   await setDoc(doc(db, 'products', id), productToSave);
 
@@ -266,7 +288,7 @@ export const addProduct = async (product: Omit<Product, 'id'>): Promise<Product>
     };
     // Asegurarnos de actualizar las searchKeywords también en el inventario
     const invKeywords = generateSearchKeywords(updatedInv);
-    const invToSave = { ...updatedInv, searchKeywords: invKeywords };
+    const invToSave = sanitizeForFirestore({ ...updatedInv, searchKeywords: invKeywords });
 
     await setDoc(doc(db, 'inventory', existingInv.id), invToSave);
     await syncToPublicCatalog(invToSave);
@@ -306,7 +328,7 @@ export const addProduct = async (product: Omit<Product, 'id'>): Promise<Product>
       minStock: newProduct.minStock || 0
     };
     const invKeywords = generateSearchKeywords(invItem);
-    const invToSave = { ...invItem, searchKeywords: invKeywords };
+    const invToSave = sanitizeForFirestore({ ...invItem, searchKeywords: invKeywords });
 
     await setDoc(doc(db, 'inventory', invId), invToSave);
     await syncToPublicCatalog(invToSave);
@@ -341,7 +363,7 @@ export const updateProduct = async (updatedProduct: Product): Promise<Product> =
   }
 
   const searchKeywords = generateSearchKeywords(updatedProduct);
-  const productToSave = { ...updatedProduct, image: imageUrl, searchKeywords };
+  const productToSave = sanitizeForFirestore({ ...updatedProduct, image: imageUrl, searchKeywords });
 
   // Save updated product record
   await setDoc(doc(db, 'products', productToSave.id), productToSave);
@@ -370,7 +392,7 @@ export const updateProduct = async (updatedProduct: Product): Promise<Product> =
     };
 
     const invKeywords = generateSearchKeywords(updatedInv);
-    const invToSave = { ...updatedInv, searchKeywords: invKeywords };
+    const invToSave = sanitizeForFirestore({ ...updatedInv, searchKeywords: invKeywords });
 
     await setDoc(doc(db, 'inventory', existingInv.id), invToSave);
     await syncToPublicCatalog(invToSave);
@@ -473,7 +495,7 @@ export const updateInventoryItem = async (item: InventoryItem): Promise<Inventor
   }
 
   const searchKeywords = generateSearchKeywords(item);
-  const itemToSave = { ...item, image: imageUrl, searchKeywords };
+  const itemToSave = sanitizeForFirestore({ ...item, image: imageUrl, searchKeywords });
 
   await setDoc(doc(db, 'inventory', itemToSave.id), itemToSave);
   await syncToPublicCatalog(itemToSave);
