@@ -536,6 +536,20 @@ export const syncOldProductsToInventory = async (): Promise<void> => {
   console.log("Inventario sincronizado con catálogo público.");
 };
 
+export const reindexInventorySearchKeywords = async (): Promise<void> => {
+  const q = query(collection(db, 'inventory'));
+  const snap = await getDocs(q);
+
+  const updatePromises = snap.docs.map(async (docSnap) => {
+    const item = docSnap.data() as InventoryItem;
+    const keywords = generateSearchKeywords(item);
+    return setDoc(doc(db, 'inventory', item.id), { ...item, searchKeywords: keywords }, { merge: true });
+  });
+
+  await Promise.all(updatePromises);
+  console.log(`Reindexados ${snap.docs.length} productos con éxito.`);
+};
+
 // Users
 export const getUsers = async (): Promise<User[]> => {
   const q = query(collection(db, 'users'));

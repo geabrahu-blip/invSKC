@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { InventoryItem, Product } from '../types';
-import { getPaginatedInventoryItems, syncOldProductsToInventory, deleteInventoryItem, updateInventoryItem, addStockAdjustment, addProduct } from '../services/db';
+import { getPaginatedInventoryItems, syncOldProductsToInventory, deleteInventoryItem, updateInventoryItem, addStockAdjustment, addProduct, reindexInventorySearchKeywords } from '../services/db';
 import { Package, Search, Trash2, Edit2, Archive, Layers, PenTool, Image as ImageIcon, AlertTriangle, Plus } from 'lucide-react';
 import { QueryDocumentSnapshot, DocumentData } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
@@ -14,6 +14,7 @@ const Inventory = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isReindexing, setIsReindexing] = useState(false);
 
   // Pagination state
   const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot<DocumentData, DocumentData> | null>(null);
@@ -56,6 +57,21 @@ const Inventory = () => {
       error('Hubo un error al sincronizar el catálogo.');
     } finally {
       setIsSyncing(false);
+    }
+  };
+
+  const handleReindex = async () => {
+    if (!window.confirm("Esto actualizará las palabras clave de todos los productos antiguos. ¿Continuar?")) return;
+    setIsReindexing(true);
+    try {
+      await reindexInventorySearchKeywords();
+      success('Buscador reindexado correctamente. Todos los productos ahora son buscables.');
+      loadData(true); // Refrescamos la vista
+    } catch (err) {
+      console.error(err);
+      error('Hubo un error al reindexar la base de datos.');
+    } finally {
+      setIsReindexing(false);
     }
   };
 
@@ -300,6 +316,14 @@ const Inventory = () => {
                 className="w-full sm:w-auto px-4 py-2 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
               >
                 {isSyncing ? 'Sincronizando...' : 'Sincronizar Catálogo'}
+              </button>
+
+              <button
+                onClick={handleReindex}
+                disabled={isReindexing}
+                className="w-full sm:w-auto px-4 py-2 bg-yellow-50 text-yellow-700 hover:bg-yellow-100 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+              >
+                {isReindexing ? 'Reindexando...' : 'Reindexar Buscador'}
               </button>
 
               <button
