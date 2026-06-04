@@ -21,16 +21,17 @@ export default function Layout() {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <header className="bg-white shadow-sm border-b border-gray-200">
+        {/* Desktop Header */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-8">
             <div className="flex items-center gap-2">
-              <Package className="h-6 w-6 text-primary-600" />
+              <Package className="h-6 w-6 text-indigo-600" />
               <Link to="/" className="text-xl font-bold text-gray-900">
                 Inventario
               </Link>
             </div>
 
-            {/* Nav Links */}
+            {/* Desktop Nav Links */}
             <nav className="hidden md:flex space-x-4">
               <Link
                 to="/dashboard"
@@ -54,21 +55,54 @@ export default function Layout() {
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="flex flex-col text-right">
+            <div className="flex flex-col text-right hidden sm:flex">
               <span className="text-sm font-medium text-gray-900">{user.name}</span>
               <span className="text-xs text-gray-500 capitalize">{user.role === 'admin' ? 'Admin' : 'Usuario'}</span>
             </div>
             <button
               onClick={logout}
-              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
+              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors shrink-0"
               title="Cerrar sesión"
             >
               <LogOut className="h-5 w-5" />
             </button>
           </div>
         </div>
+
+        {/* Mobile Nav Links (Horizontal Scroll / Pills) */}
+        <div className="w-full overflow-x-auto whitespace-nowrap snap-x hide-scrollbar md:hidden bg-white border-t border-gray-100 pb-1">
+          <style>{`
+            .hide-scrollbar::-webkit-scrollbar {
+              display: none;
+            }
+            .hide-scrollbar {
+              -ms-overflow-style: none;
+              scrollbar-width: none;
+            }
+          `}</style>
+          <div className="flex px-4 py-3 gap-2">
+            <Link
+              to="/dashboard"
+              className={`snap-start shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${isActive('/dashboard') ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-50 text-gray-600 border border-gray-200'}`}
+            >
+              Compras
+            </Link>
+            <Link
+              to="/inventory"
+              className={`snap-start shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${isActive('/inventory') ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-50 text-gray-600 border border-gray-200'}`}
+            >
+              Inventario General
+            </Link>
+            <Link
+              to="/catalog"
+              className={`snap-start shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${isActive('/catalog') ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-50 text-gray-600 border border-gray-200'}`}
+            >
+              Catálogo Visual
+            </Link>
+          </div>
+        </div>
       </header>
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         <Outlet />
       </main>
     </div>
