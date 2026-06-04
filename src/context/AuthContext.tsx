@@ -22,6 +22,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Bypass auth in development if requested
+    if (import.meta.env.VITE_BYPASS_AUTH === 'true') {
+      setUser({ id: 'test_admin', email: 'admin@test.com', role: 'admin', name: 'Test Admin' });
+      setLoading(false);
+      return;
+    }
+
     // Listen to Firebase Auth state changes
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {

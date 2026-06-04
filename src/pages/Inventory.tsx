@@ -307,9 +307,9 @@ const Inventory = () => {
         </div>
 
         {/* Stats Cards & Actions */}
-        <div className="flex flex-col sm:flex-row gap-4 items-center">
+        <div className="flex flex-col md:flex-row gap-4 items-center w-full sm:w-auto">
           {isAdmin && (
-            <>
+            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
               <button
                 onClick={handleSyncCatalog}
                 disabled={isSyncing}
@@ -332,26 +332,30 @@ const Inventory = () => {
               >
                 <Plus className="h-5 w-5" /> Agregar Producto Nuevo
               </button>
-            </>
+            </div>
           )}
-          <div className="flex gap-4">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex items-center gap-4 min-w-[160px]">
-              <div className="bg-blue-50 p-3 rounded-lg text-blue-600">
-                <Layers className="w-6 h-6" />
-              </div>
-              <div>
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Productos Distintos</p>
-                <p className="text-2xl font-bold text-gray-900">{totalProducts}</p>
+          <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex items-center justify-between sm:justify-start gap-4 flex-1 sm:min-w-[160px]">
+              <div className="flex items-center gap-4">
+                <div className="bg-blue-50 p-3 rounded-lg text-blue-600">
+                  <Layers className="w-6 h-6" />
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Productos Distintos</p>
+                  <p className="text-2xl font-bold text-gray-900">{totalProducts}</p>
+                </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex items-center gap-4 min-w-[160px]">
-              <div className="bg-emerald-50 p-3 rounded-lg text-emerald-600">
-                <Archive className="w-6 h-6" />
-              </div>
-              <div>
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Total de Unidades</p>
-                <p className="text-2xl font-bold text-gray-900">{totalUnits}</p>
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex items-center justify-between sm:justify-start gap-4 flex-1 sm:min-w-[160px]">
+              <div className="flex items-center gap-4">
+                <div className="bg-emerald-50 p-3 rounded-lg text-emerald-600">
+                  <Archive className="w-6 h-6" />
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Total de Unidades</p>
+                  <p className="text-2xl font-bold text-gray-900">{totalUnits}</p>
+                </div>
               </div>
             </div>
           </div>
@@ -359,8 +363,8 @@ const Inventory = () => {
       </div>
 
       {/* Search Bar & Filters */}
-      <div className="bg-white p-2 rounded-xl shadow-sm border border-gray-100 flex flex-col sm:flex-row gap-3">
-        <div className="relative w-full max-w-xl flex-1">
+      <div className="bg-white p-2 rounded-xl shadow-sm border border-gray-100 flex flex-col md:flex-row gap-3 w-full">
+        <div className="relative w-full flex-1">
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
             <Search className="h-5 w-5 text-gray-400" />
           </div>
@@ -372,11 +376,11 @@ const Inventory = () => {
             className="block w-full pl-11 pr-4 py-3 border-0 bg-transparent text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
           />
         </div>
-        <div className="flex items-center min-w-[200px]">
+        <div className="flex items-center w-full md:w-auto min-w-[200px] border-t md:border-t-0 md:border-l border-gray-200 mt-2 md:mt-0 pt-2 md:pt-0">
           <select
             value={sortOrder}
             onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
-            className="block w-full pl-3 pr-10 py-3 text-sm text-gray-700 bg-transparent border-l border-gray-200 focus:ring-0 focus:border-gray-200"
+            className="block w-full pl-3 pr-10 py-3 text-sm text-gray-700 bg-transparent border-0 focus:ring-0"
           >
             <option value="desc">Mayor a menor stock</option>
             <option value="asc">Menor a mayor stock</option>
@@ -384,8 +388,100 @@ const Inventory = () => {
         </div>
       </div>
 
-      {/* Table Section */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      {/* Mobile Cards View */}
+      <div className="block md:hidden space-y-4">
+        {products.map((product) => {
+          const isCritical = product.minStock !== undefined && product.units <= product.minStock;
+          return (
+            <div key={product.id} className={`bg-white rounded-xl shadow-sm border ${isCritical ? 'border-red-300' : 'border-gray-100'} overflow-hidden`}>
+              {/* Cabecera */}
+              <div className="p-4 flex gap-4">
+                <div className="h-20 w-20 bg-gray-100 rounded-lg overflow-hidden shrink-0">
+                  {product.image ? (
+                    <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <Package className="w-full h-full p-4 text-gray-400" />
+                  )}
+                </div>
+                <div className="flex-1 flex flex-col justify-center">
+                  <h3 className="font-medium text-gray-900 leading-tight">{product.name}</h3>
+                  <div className="text-[10px] mt-2 flex flex-wrap gap-1">
+                    {product.brand && <span className="bg-gray-100 px-1.5 py-0.5 rounded">{product.brand}</span>}
+                    {product.category && <span className="bg-gray-100 px-1.5 py-0.5 rounded">{product.category}</span>}
+                    {product.presentation && <span className="bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded">{product.presentation}</span>}
+                  </div>
+                </div>
+                <div className="flex flex-col items-center justify-center shrink-0 min-w-[3rem]">
+                  {isCritical ? (
+                    <>
+                      <span className="flex items-center gap-1 font-bold text-red-600 text-lg">
+                        <AlertTriangle className="w-4 h-4" />
+                        {product.units}
+                      </span>
+                      <span className="text-[10px] text-red-500 font-medium">Mín: {product.minStock}</span>
+                    </>
+                  ) : (
+                    <span className="font-bold text-gray-900 text-xl">{product.units}</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Bloque de Precios en 2 Columnas */}
+              <div className="bg-gray-50 p-4 border-y border-gray-100 grid grid-cols-2 gap-4">
+                <div className="flex flex-col justify-center border-r border-gray-200 pr-2">
+                  <span className="text-gray-500 text-[10px] font-bold uppercase mb-1">Costo Base</span>
+                  <span className="text-gray-900 font-bold bg-gray-100 px-2 py-1 rounded inline-block w-fit">
+                    Bs. {product.priceBs.toFixed(2)}
+                  </span>
+                </div>
+                <div className="flex flex-col items-end gap-1.5">
+                  <div className="flex items-center gap-2 justify-end w-full">
+                    <span className="text-gray-400 text-[10px] font-bold uppercase">Mayor:</span>
+                    <span className="text-amber-600 font-semibold text-right">Bs. {product.wholesalePrice.toFixed(2)}</span>
+                  </div>
+                  <div className="flex items-center gap-2 justify-end w-full">
+                    <span className="text-gray-400 text-[10px] font-bold uppercase">Detalle:</span>
+                    <span className="text-emerald-600 font-bold text-right">Bs. {product.sellingPrice.toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Botones Grandes Táctiles */}
+              <div className="p-4 flex gap-3">
+                <button
+                  onClick={() => handleOpenAdjustStock(product)}
+                  className="flex-1 flex justify-center items-center gap-2 py-3 bg-indigo-50 text-indigo-700 rounded-lg font-medium hover:bg-indigo-100 transition-colors"
+                >
+                  <Edit2 className="w-4 h-4" />
+                  Stock
+                </button>
+                {isAdmin && (
+                  <button
+                    onClick={() => handleOpenEdit(product)}
+                    className="flex-1 flex justify-center items-center gap-2 py-3 bg-gray-50 text-gray-700 border border-gray-200 rounded-lg font-medium hover:bg-gray-100 transition-colors"
+                  >
+                    <PenTool className="w-4 h-4" />
+                    Editar
+                  </button>
+                )}
+              </div>
+            </div>
+          );
+        })}
+        {products.length === 0 && !isSearching && (
+          <div className="p-8 text-center text-gray-500 bg-white rounded-xl border border-gray-100">
+            No se encontraron productos en el inventario.
+          </div>
+        )}
+        {isSearching && (
+          <div className="p-8 text-center text-gray-500 bg-white rounded-xl border border-gray-100">
+            Buscando productos...
+          </div>
+        )}
+      </div>
+
+      {/* Desktop Table View */}
+      <div className="hidden md:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
             <thead className="bg-gray-50 text-gray-600 font-medium border-b border-gray-200 uppercase text-xs tracking-wider">
@@ -533,7 +629,7 @@ const Inventory = () => {
       {/* Add New Product Modal */}
       {isAddModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 backdrop-blur-sm overflow-y-auto">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl my-8 relative">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl my-4 sm:my-8 relative">
             <div className="absolute top-4 right-4 z-10">
               <button onClick={() => setIsAddModalOpen(false)} className="p-2 bg-white rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600 shadow-sm border border-gray-200">
                 &times;
@@ -550,8 +646,8 @@ const Inventory = () => {
 
       {/* Adjust Stock Modal */}
       {isAdjustModalOpen && selectedProduct && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 backdrop-blur-sm overflow-y-auto">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md my-4 sm:my-8 overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
               <h2 className="text-xl font-semibold text-gray-900">Ajustar Stock</h2>
               <button onClick={() => setIsAdjustModalOpen(false)} className="text-gray-400 hover:text-gray-600">
@@ -683,7 +779,7 @@ const Inventory = () => {
       {/* Edit Details Modal */}
       {isEditModalOpen && selectedProduct && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 backdrop-blur-sm overflow-y-auto">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl overflow-hidden my-8">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl overflow-hidden my-4 sm:my-8">
             <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center sticky top-0 bg-white z-10">
               <h2 className="text-xl font-semibold text-gray-900">Editar Detalles del Producto</h2>
               <button onClick={() => setIsEditModalOpen(false)} className="text-gray-400 hover:text-gray-600">
