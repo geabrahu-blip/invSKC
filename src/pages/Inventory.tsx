@@ -295,10 +295,10 @@ const Inventory = () => {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-10">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight flex items-center gap-3">
-            <Package className="w-8 h-8 text-indigo-600" />
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-gray-900 tracking-tight flex items-center gap-3">
+            <Package className="w-6 h-6 md:w-8 md:h-8 text-indigo-600 shrink-0" />
             Inventario General
           </h1>
           <p className="mt-1 text-sm text-gray-500">

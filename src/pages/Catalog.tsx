@@ -64,7 +64,7 @@ export default function Catalog() {
           <p className="mt-1">Intenta con otra búsqueda o asegúrate de tener inventario registrado.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {filteredProducts.map(product => (
             <div key={product.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow flex flex-col h-full">
               <div className="aspect-square w-full bg-white relative border-b border-gray-100 flex items-center justify-center overflow-hidden shrink-0">
