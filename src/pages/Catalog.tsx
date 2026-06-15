@@ -105,12 +105,29 @@ export default function Catalog() {
                 </div>
 
                 <div className="pt-3 border-t border-gray-100 mt-auto space-y-1.5">
+                  {product.wholesalePrice > 0 && (
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-gray-500 text-xs uppercase tracking-wider font-medium">Por Mayor</span>
+                      <span className="font-semibold text-blue-600">Bs. {product.wholesalePrice.toFixed(2)}</span>
+                    </div>
+                  )}
+                  {product.comparePrice && (
+                    <div className="flex justify-between items-center text-sm mt-1">
+                      <span className="text-gray-400 text-xs uppercase tracking-wider font-medium">Antes</span>
+                      <span className="font-semibold text-gray-400 line-through text-xs">Bs. {product.comparePrice.toFixed(2)}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between items-center text-sm">
-                    <span className="text-gray-500 text-xs uppercase tracking-wider font-medium">Por Mayor</span>
-                    <span className="font-semibold text-blue-600">Bs. {product.wholesalePrice.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-gray-500 text-xs uppercase tracking-wider font-medium">Unidad</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-gray-500 text-xs uppercase tracking-wider font-medium">
+                        {product.comparePrice ? 'Oferta' : 'Unidad'}
+                      </span>
+                      {product.comparePrice && product.comparePrice > product.sellingPrice && (
+                        <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-sm shadow-sm">
+                          -{Math.round(((product.comparePrice - product.sellingPrice) / product.comparePrice) * 100)}%
+                        </span>
+                      )}
+                    </div>
                     <span className="font-bold text-emerald-600 text-base">Bs. {product.sellingPrice.toFixed(2)}</span>
                   </div>
                 </div>

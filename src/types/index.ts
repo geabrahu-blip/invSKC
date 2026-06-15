@@ -17,6 +17,7 @@ export interface Product {
   totalPrice: number; // calculated
   wholesalePrice: number;
   sellingPrice: number;
+  comparePrice?: number; // Precio antes (oferta) tachado
   name: string;
 
   // New optional fields for compatibility
@@ -47,6 +48,7 @@ export interface InventoryItem {
   priceBs: number;
   wholesalePrice: number;
   sellingPrice: number;
+  comparePrice?: number; // Precio antes (oferta) tachado
   minStock?: number; // Minimum stock threshold for reorder alerts
 }
 
@@ -62,6 +64,7 @@ export interface PublicCatalogItem {
   units: number;
   wholesalePrice: number;
   sellingPrice: number;
+  comparePrice?: number; // Precio antes (oferta) tachado
 }
 
 export interface Purchase {

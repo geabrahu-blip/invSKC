@@ -183,17 +183,19 @@ export default function PurchaseDetail() {
       </div>
 
       {/* Tarjetas de Resumen */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
-        {statCards.map((stat, idx) => (
-          <div key={idx} className="bg-white rounded-xl border border-gray-200 p-3 flex flex-col items-center justify-center text-center">
-            <div className={cn("p-2 rounded-full mb-2", stat.bgColor, stat.color)}>
-              <stat.icon className="h-5 w-5" />
+      {isAdmin && (
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+          {statCards.map((stat, idx) => (
+            <div key={idx} className="bg-white rounded-xl border border-gray-200 p-3 flex flex-col items-center justify-center text-center">
+              <div className={cn("p-2 rounded-full mb-2", stat.bgColor, stat.color)}>
+                <stat.icon className="h-5 w-5" />
+              </div>
+              <p className="text-xs font-medium text-gray-500 mb-1 leading-tight">{stat.title}</p>
+              <p className={cn("text-sm font-bold", stat.color)}>{stat.value}</p>
             </div>
-            <p className="text-xs font-medium text-gray-500 mb-1 leading-tight">{stat.title}</p>
-            <p className={cn("text-sm font-bold", stat.color)}>{stat.value}</p>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* Lista y Formulario de Productos */}
       <div className="space-y-6 mt-8">
@@ -201,16 +203,14 @@ export default function PurchaseDetail() {
           <h2 className="text-xl font-bold text-gray-900">Productos</h2>
         </div>
 
-        {isAdmin && (
-          <div className="mb-8">
-            <ProductForm
-              purchase={purchase}
-              onAdd={handleAddProduct}
-              editingProduct={editingProduct}
-              onCancelEdit={handleCancelEdit}
-            />
-          </div>
-        )}
+        <div className="mb-8">
+          <ProductForm
+            purchase={purchase}
+            onAdd={handleAddProduct}
+            editingProduct={editingProduct}
+            onCancelEdit={handleCancelEdit}
+          />
+        </div>
 
         <ProductList
           products={products}
