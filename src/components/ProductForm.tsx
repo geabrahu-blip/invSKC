@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Purchase, Product, InventoryItem } from '../types';
 import { Image as ImageIcon, Plus, Save, X } from 'lucide-react';
 import { getInventoryItems } from '../services/db';
+import { useAuth } from '../context/AuthContext';
 
 interface ProductFormProps {
   purchase: Purchase;
@@ -11,6 +12,7 @@ interface ProductFormProps {
 }
 
 export default function ProductForm({ purchase, onAdd, editingProduct, onCancelEdit }: ProductFormProps) {
+  const { isAdmin } = useAuth();
   const [image, setImage] = useState('');
   const [name, setName] = useState('');
   const [brand, setBrand] = useState('');
@@ -22,6 +24,7 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
   const [units, setUnits] = useState<number | ''>('');
   const [wholesalePrice, setWholesalePrice] = useState<number | ''>('');
   const [sellingPrice, setSellingPrice] = useState<number | ''>('');
+  const [comparePrice, setComparePrice] = useState<number | ''>('');
   const [minStock, setMinStock] = useState<number | ''>('');
 
   const [existingItems, setExistingItems] = useState<InventoryItem[]>([]);
@@ -59,6 +62,7 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
       setUnits(editingProduct.units);
       setWholesalePrice(editingProduct.wholesalePrice);
       setSellingPrice(editingProduct.sellingPrice);
+      setComparePrice(editingProduct.comparePrice ?? '');
       setMinStock(editingProduct.minStock ?? '');
     } else {
       resetForm();
@@ -77,6 +81,7 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
     setUnits('');
     setWholesalePrice('');
     setSellingPrice('');
+    setComparePrice('');
     setMinStock('');
   };
 
@@ -89,6 +94,7 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
     setPriceBs(item.priceBs);
     setWholesalePrice(item.wholesalePrice);
     setSellingPrice(item.sellingPrice);
+    if (item.comparePrice !== undefined) setComparePrice(item.comparePrice);
     if (item.minStock !== undefined) setMinStock(item.minStock);
     if (item.image) setImage(item.image);
     setShowSuggestions(false);
@@ -148,12 +154,16 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || priceBs === '' || units === '' || wholesalePrice === '' || sellingPrice === '') {
-      alert("Por favor, asegúrate de llenar todos los campos requeridos con valores numéricos válidos. (No uses símbolos como '+' en los precios o unidades)");
+
+    const finalPriceBs = isAdmin ? priceBs : 0;
+    const finalWholesalePrice = isAdmin ? wholesalePrice : 0;
+
+    if (!name || finalPriceBs === '' || units === '' || finalWholesalePrice === '' || sellingPrice === '') {
+      alert("Por favor, asegúrate de llenar todos los campos requeridos con valores numéricos válidos.");
       return;
     }
 
-    const totalPrice = Number(priceBs) * Number(units);
+    const totalPrice = Number(finalPriceBs) * Number(units);
 
     onAdd({
       purchaseId: purchase.id,
@@ -164,10 +174,11 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
       expirationDate: expirationDate || undefined,
       sku: sku || undefined,
       image: image ? image.trim() : '',
-      priceBs: Number(priceBs),
+      priceBs: Number(finalPriceBs),
       units: Number(units),
-      wholesalePrice: Number(wholesalePrice),
+      wholesalePrice: Number(finalWholesalePrice),
       sellingPrice: Number(sellingPrice),
+      comparePrice: comparePrice !== '' ? Number(comparePrice) : undefined,
       totalPrice,
       minStock: minStock !== '' ? Number(minStock) : undefined,
     });
@@ -358,35 +369,52 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
           </div>
 
           {/* Precios de Entrada */}
-          <div className="col-span-1">
-            <label htmlFor="prod-price-bs" className="block text-sm font-medium text-gray-700 mb-1">Precio Compra (Bs)</label>
-            <input
-              id="prod-price-bs"
-              type="number"
-              step="0.01"
-              required
-              value={priceBs}
-              onChange={(e) => setPriceBs(Number(e.target.value))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-            />
-          </div>
+          {isAdmin && (
+            <div className="col-span-1">
+              <label htmlFor="prod-price-bs" className="block text-sm font-medium text-gray-700 mb-1">Precio Compra (Bs)</label>
+              <input
+                id="prod-price-bs"
+                type="number"
+                step="0.01"
+                required={isAdmin}
+                value={priceBs}
+                onChange={(e) => setPriceBs(Number(e.target.value))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+              />
+            </div>
+          )}
 
           {/* Precios de Salida */}
+          {isAdmin && (
+            <div className="col-span-1">
+              <label htmlFor="prod-price-mayor" className="block text-sm font-medium text-gray-700 mb-1">Precio x Mayor</label>
+              <input
+                id="prod-price-mayor"
+                type="number"
+                step="0.01"
+                required={isAdmin}
+                value={wholesalePrice}
+                onChange={(e) => setWholesalePrice(Number(e.target.value))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+              />
+            </div>
+          )}
+
           <div className="col-span-1">
-            <label htmlFor="prod-price-mayor" className="block text-sm font-medium text-gray-700 mb-1">Precio x Mayor</label>
+            <label htmlFor="prod-compare-price" className="block text-sm font-medium text-gray-700 mb-1">Precio Antes (Oferta)</label>
             <input
-              id="prod-price-mayor"
+              id="prod-compare-price"
               type="number"
               step="0.01"
-              required
-              value={wholesalePrice}
-              onChange={(e) => setWholesalePrice(Number(e.target.value))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+              value={comparePrice}
+              onChange={(e) => setComparePrice(e.target.value !== '' ? Number(e.target.value) : '')}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400 text-gray-500 line-through decoration-gray-400"
+              placeholder="Ej. 150.00"
             />
           </div>
 
           <div className="col-span-1">
-            <label htmlFor="prod-price-unidad" className="block text-sm font-medium text-gray-700 mb-1">Precio Unidad</label>
+            <label htmlFor="prod-price-unidad" className="block text-sm font-medium text-gray-700 mb-1">Precio Unidad (Venta)</label>
             <input
               id="prod-price-unidad"
               type="number"
@@ -394,7 +422,7 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
               required
               value={sellingPrice}
               onChange={(e) => setSellingPrice(Number(e.target.value))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 font-bold text-emerald-700"
             />
           </div>
         </div>
@@ -402,8 +430,12 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
 
       <div className="flex items-center justify-between pt-4 border-t border-gray-100">
         <div className="text-sm">
-          <span className="text-gray-500">Costo Total del Lote: </span>
-          <span className="text-lg font-bold text-gray-900">Bs. {currentTotal}</span>
+          {isAdmin && (
+            <>
+              <span className="text-gray-500">Costo Total del Lote: </span>
+              <span className="text-lg font-bold text-gray-900">Bs. {currentTotal}</span>
+            </>
+          )}
         </div>
 
         <div className="flex gap-2">

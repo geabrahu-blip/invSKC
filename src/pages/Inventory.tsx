@@ -6,6 +6,7 @@ import { QueryDocumentSnapshot, DocumentData } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import ProductForm from '../components/ProductForm';
+import { cn } from '../components/Layout';
 
 const Inventory = () => {
   const { isAdmin } = useAuth();
@@ -427,18 +428,28 @@ const Inventory = () => {
               </div>
 
               {/* Bloque de Precios en 2 Columnas */}
-              <div className="bg-gray-50 p-4 border-y border-gray-100 grid grid-cols-2 gap-4">
-                <div className="flex flex-col justify-center border-r border-gray-200 pr-2">
-                  <span className="text-gray-500 text-[10px] font-bold uppercase mb-1">Costo Base</span>
-                  <span className="text-gray-900 font-bold bg-gray-100 px-2 py-1 rounded inline-block w-fit">
-                    Bs. {product.priceBs.toFixed(2)}
-                  </span>
-                </div>
-                <div className="flex flex-col items-end gap-1.5">
-                  <div className="flex items-center gap-2 justify-end w-full">
-                    <span className="text-gray-400 text-[10px] font-bold uppercase">Mayor:</span>
-                    <span className="text-amber-600 font-semibold text-right">Bs. {product.wholesalePrice.toFixed(2)}</span>
+              <div className={cn("bg-gray-50 p-4 border-y border-gray-100 grid gap-4", isAdmin ? "grid-cols-2" : "grid-cols-1")}>
+                {isAdmin && (
+                  <div className="flex flex-col justify-center border-r border-gray-200 pr-2">
+                    <span className="text-gray-500 text-[10px] font-bold uppercase mb-1">Costo Base</span>
+                    <span className="text-gray-900 font-bold bg-gray-100 px-2 py-1 rounded inline-block w-fit">
+                      Bs. {product.priceBs.toFixed(2)}
+                    </span>
                   </div>
+                )}
+                <div className="flex flex-col items-end gap-1.5 justify-center">
+                  {isAdmin && (
+                    <div className="flex items-center gap-2 justify-end w-full">
+                      <span className="text-gray-400 text-[10px] font-bold uppercase">Mayor:</span>
+                      <span className="text-amber-600 font-semibold text-right">Bs. {product.wholesalePrice.toFixed(2)}</span>
+                    </div>
+                  )}
+                  {product.comparePrice && (
+                    <div className="flex items-center gap-2 justify-end w-full">
+                      <span className="text-gray-400 text-[10px] font-bold uppercase">Antes:</span>
+                      <span className="text-gray-500 font-semibold text-right line-through">Bs. {product.comparePrice.toFixed(2)}</span>
+                    </div>
+                  )}
                   <div className="flex items-center gap-2 justify-end w-full">
                     <span className="text-gray-400 text-[10px] font-bold uppercase">Detalle:</span>
                     <span className="text-emerald-600 font-bold text-right">Bs. {product.sellingPrice.toFixed(2)}</span>
@@ -533,24 +544,36 @@ const Inventory = () => {
                   </td>
 
                   {/* Columna: Costo Base */}
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex flex-col items-end justify-center">
-                      <span className="text-gray-500 text-[10px] font-bold uppercase tracking-wider mb-0.5">Compra</span>
-                      <span className="text-gray-900 font-bold text-sm bg-gray-100/80 px-2 py-1 rounded border border-gray-200/50">
-                        Bs. {product.priceBs.toFixed(2)}
-                      </span>
-                    </div>
-                  </td>
+                  {isAdmin && (
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex flex-col items-end justify-center">
+                        <span className="text-gray-500 text-[10px] font-bold uppercase tracking-wider mb-0.5">Compra</span>
+                        <span className="text-gray-900 font-bold text-sm bg-gray-100/80 px-2 py-1 rounded border border-gray-200/50">
+                          Bs. {product.priceBs.toFixed(2)}
+                        </span>
+                      </div>
+                    </td>
+                  )}
 
                   {/* Columna: Precios de Venta */}
                   <td className="px-6 py-4 text-right">
                     <div className="flex flex-col items-end gap-1.5">
-                      <div className="flex items-center justify-end gap-2 w-full">
-                        <span className="text-gray-400 text-[10px] font-bold uppercase tracking-wider">Mayor:</span>
-                        <span className="text-amber-600 font-semibold w-20 text-right">
-                          Bs. {product.wholesalePrice.toFixed(2)}
-                        </span>
-                      </div>
+                      {isAdmin && (
+                        <div className="flex items-center justify-end gap-2 w-full">
+                          <span className="text-gray-400 text-[10px] font-bold uppercase tracking-wider">Mayor:</span>
+                          <span className="text-amber-600 font-semibold w-20 text-right">
+                            Bs. {product.wholesalePrice.toFixed(2)}
+                          </span>
+                        </div>
+                      )}
+                      {product.comparePrice && (
+                        <div className="flex items-center justify-end gap-2 w-full">
+                          <span className="text-gray-400 text-[10px] font-bold uppercase tracking-wider">Antes:</span>
+                          <span className="text-gray-500 font-semibold w-20 text-right line-through">
+                            Bs. {product.comparePrice.toFixed(2)}
+                          </span>
+                        </div>
+                      )}
                       <div className="flex items-center justify-end gap-2 w-full">
                         <span className="text-gray-400 text-[10px] font-bold uppercase tracking-wider">Detalle:</span>
                         <span className="text-emerald-600 font-bold w-20 text-right">
@@ -868,32 +891,48 @@ const Inventory = () => {
 
               <div className="pt-4 mt-4 border-t border-gray-200">
                 <h3 className="font-medium text-gray-900 mb-4">Actualización de Precios</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {isAdmin && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Costo (Bs)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        required={isAdmin}
+                        value={editForm.priceBs || ''}
+                        onChange={(e) => setEditForm({...editForm, priceBs: Number(e.target.value)})}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                      />
+                    </div>
+                  )}
+                  {isAdmin && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Venta Mayor (Bs)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        required={isAdmin}
+                        value={editForm.wholesalePrice || ''}
+                        onChange={(e) => setEditForm({...editForm, wholesalePrice: Number(e.target.value)})}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                      />
+                    </div>
+                  )}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Costo (Bs)</label>
+                    <label htmlFor="inv-compare-price" className="block text-sm font-medium text-gray-700 mb-1">Precio Antes (Oferta)</label>
                     <input
+                      id="inv-compare-price"
                       type="number"
                       step="0.01"
-                      required
-                      value={editForm.priceBs || ''}
-                      onChange={(e) => setEditForm({...editForm, priceBs: Number(e.target.value)})}
+                      value={editForm.comparePrice || ''}
+                      onChange={(e) => setEditForm({...editForm, comparePrice: e.target.value !== '' ? Number(e.target.value) : undefined})}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Venta Mayor (Bs)</label>
+                    <label htmlFor="inv-selling-price" className="block text-sm font-medium text-gray-700 mb-1">Venta Unidad (Bs)</label>
                     <input
-                      type="number"
-                      step="0.01"
-                      required
-                      value={editForm.wholesalePrice || ''}
-                      onChange={(e) => setEditForm({...editForm, wholesalePrice: Number(e.target.value)})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Venta Unidad (Bs)</label>
-                    <input
+                      id="inv-selling-price"
                       type="number"
                       step="0.01"
                       required
