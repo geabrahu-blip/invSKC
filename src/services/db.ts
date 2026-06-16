@@ -119,14 +119,14 @@ const generateSearchKeywords = (product: { name: string, brand?: string, sku?: s
 };
 
 // Helper to remove undefined properties and convert undefined strings to empty strings for Firestore compatibility
-const sanitizeForFirestore = <T extends Record<string, any>>(obj: T): T => {
+const sanitizeForFirestore = <T extends Record<string, unknown>>(obj: T): T => {
   const sanitized = { ...obj };
 
   // Convert known optional string fields to "" if undefined
   const stringFields = ['sku', 'brand', 'category', 'presentation', 'expirationDate', 'gender'];
   stringFields.forEach(field => {
     if (sanitized[field] === undefined) {
-      (sanitized as any)[field] = "";
+      (sanitized as Record<string, unknown>)[field] = "";
     }
   });
 
@@ -447,7 +447,7 @@ export const getPaginatedInventoryItems = async (
   lastVisibleDoc: QueryDocumentSnapshot<DocumentData, DocumentData> | null = null,
   searchTerm: string = ''
 ): Promise<{ items: InventoryItem[], lastDoc: QueryDocumentSnapshot<DocumentData, DocumentData> | null }> => {
-  let baseQueryConstraints: any[] = [];
+  const baseQueryConstraints: import('firebase/firestore').QueryConstraint[] = [];
 
   if (searchTerm) {
     const cleanTerm = searchTerm.toLowerCase().trim();

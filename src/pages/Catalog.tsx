@@ -17,8 +17,11 @@ export default function Catalog() {
     // Fetching from inventory here works, but fetching from public_catalog guarantees we only see public data.
     const productsData = await getInventoryItems(); // Fetching from inventory for now as it's admin-facing too, but to be strictly correct with the new collection we should fetch from `public_catalog`.
 
+    // We filter out products that are explicitly marked as not to be shown in the catalog.
+    const visibleProducts = productsData.filter(p => p.showInCatalog !== false);
+
     // We will keep it simple and filter out 0 stock if needed, or just display them all.
-    setProducts(productsData);
+    setProducts(visibleProducts);
   };
 
   const filteredProducts = products.filter(p =>

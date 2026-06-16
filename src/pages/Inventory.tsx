@@ -46,6 +46,7 @@ const Inventory = () => {
     }, 500); // Wait 500ms after user stops typing to trigger search
 
     return () => clearTimeout(delayDebounceFn);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm, sortOrder]); // Re-fetch if search term or sort order changes
 
   const handleSyncCatalog = async () => {
@@ -172,14 +173,24 @@ const Inventory = () => {
     try {
       const cleanedForm = {
         ...editForm,
-        image: editForm.image ? editForm.image.trim() : ''
+        image: editForm.image ? editForm.image.trim() : '',
+        showInCatalog: editForm.showInCatalog !== false
       };
+
+      // Si no es admin, no puede modificar costo, mayor, unidades ni minStock
+      if (!isAdmin) {
+        cleanedForm.priceBs = selectedProduct.priceBs;
+        cleanedForm.wholesalePrice = selectedProduct.wholesalePrice;
+        cleanedForm.units = selectedProduct.units;
+        cleanedForm.minStock = selectedProduct.minStock;
+      }
 
       await updateInventoryItem(cleanedForm as InventoryItem);
       setIsEditModalOpen(false);
       success('Detalles del producto actualizados correctamente.');
       loadData();
-    } catch (err: any) {
+    } catch (e) {
+      const err = e as Error;
       console.error('Error saving edits:', err);
       error(`Error: ${err.message || 'No se pudieron guardar los cambios'}`);
     }
@@ -892,6 +903,18 @@ const Inventory = () => {
               <div className="pt-4 mt-4 border-t border-gray-200">
                 <h3 className="font-medium text-gray-900 mb-4">Actualización de Precios</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="col-span-1 md:col-span-2 lg:col-span-4 flex items-center mb-4">
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        className="sr-only peer"
+                        checked={editForm.showInCatalog !== false}
+                        onChange={(e) => setEditForm({ ...editForm, showInCatalog: e.target.checked })}
+                      />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                      <span className="ml-3 text-sm font-medium text-gray-700">Mostrar en Catálogo Público</span>
+                    </label>
+                  </div>
                   {isAdmin && (
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Costo (Bs)</label>

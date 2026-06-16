@@ -28,6 +28,7 @@ export interface Product {
   presentation?: string; // e.g. '236ml', '400g'
   sku?: string; // Barcode or custom SKU for faster matching
   minStock?: number; // Minimum stock threshold for reorder alerts
+  showInCatalog?: boolean; // Whether to show in public catalog
 }
 
 export interface InventoryItem {
@@ -50,6 +51,7 @@ export interface InventoryItem {
   sellingPrice: number;
   comparePrice?: number; // Precio antes (oferta) tachado
   minStock?: number; // Minimum stock threshold for reorder alerts
+  showInCatalog?: boolean; // Whether to show in public catalog
 }
 
 export interface PublicCatalogItem {
