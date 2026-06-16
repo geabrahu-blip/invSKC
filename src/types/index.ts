@@ -67,6 +67,7 @@ export interface PublicCatalogItem {
   wholesalePrice: number;
   sellingPrice: number;
   comparePrice?: number; // Precio antes (oferta) tachado
+  showInCatalog?: boolean;
 }
 
 export interface Purchase {
