@@ -579,9 +579,26 @@ export const getUsers = async (): Promise<User[]> => {
   return querySnapshot.docs.map(doc => doc.data() as User);
 };
 
-// We don't expose addUser directly for Firebase Auth flow here,
-// usually you create the user in Auth first, then save to DB.
-// But we keep this for backwards compatibility where the UI uses it (needs to be refactored eventually if creating users from UI)
+// Helper para crear usuarios sin cerrar la sesión actual
+import { createUserWithEmailAndPassword, signOut as firebaseSignOut } from 'firebase/auth';
+import { secondaryAuth } from './firebase';
+
+export const addUserViaSecondaryApp = async (user: Omit<User, 'id'>, password: string): Promise<User> => {
+  // 1. Create the user in Firebase Auth using the secondary app instance
+  const userCredential = await createUserWithEmailAndPassword(secondaryAuth, user.email, password);
+  const uid = userCredential.user.uid;
+
+  // 2. Log out the secondary app immediately so it doesn't leave an active token
+  await firebaseSignOut(secondaryAuth);
+
+  // 3. Save the custom user document in Firestore
+  const newUser: User = { ...user, id: uid };
+  await setDoc(doc(db, 'users', uid), newUser);
+
+  return newUser;
+};
+
+// We keep this for backwards compatibility
 export const addUser = async (user: Omit<User, 'id'>, uid?: string): Promise<User> => {
   const id = uid || generateId();
   const newUser: User = { ...user, id };

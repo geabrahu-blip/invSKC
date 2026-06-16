@@ -51,6 +51,14 @@ export default function Layout() {
               >
                 Catálogo Visual
               </Link>
+              {user.role === 'admin' && (
+                <Link
+                  to="/users"
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive('/users') ? 'bg-indigo-100 text-indigo-700' : 'text-gray-600 hover:bg-gray-100'}`}
+                >
+                  Usuarios
+                </Link>
+              )}
             </nav>
           </div>
 
@@ -99,6 +107,14 @@ export default function Layout() {
             >
               Catálogo Visual
             </Link>
+            {user.role === 'admin' && (
+              <Link
+                to="/users"
+                className={`snap-start shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${isActive('/users') ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-50 text-gray-600 border border-gray-200'}`}
+              >
+                Usuarios
+              </Link>
+            )}
           </div>
         </div>
       </header>
