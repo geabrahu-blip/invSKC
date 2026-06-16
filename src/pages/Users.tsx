@@ -21,6 +21,7 @@ export default function Users() {
 
   useEffect(() => {
     loadUsers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadUsers = async () => {
@@ -110,7 +111,8 @@ export default function Users() {
 
       resetForm();
       await loadUsers();
-    } catch (err: any) {
+    } catch (caughtError: unknown) {
+      const err = caughtError as { code?: string };
       console.error(err);
       const errCode = err?.code;
       if (errCode === 'auth/email-already-in-use') {
