@@ -114,7 +114,7 @@ export default function Catalog() {
                       <span className="font-semibold text-blue-600">Bs. {product.wholesalePrice.toFixed(2)}</span>
                     </div>
                   )}
-                  {product.comparePrice && (
+                  {product.comparePrice !== undefined && product.comparePrice > 0 && (
                     <div className="flex justify-between items-center text-sm mt-1">
                       <span className="text-gray-400 text-xs uppercase tracking-wider font-medium">Antes</span>
                       <span className="font-semibold text-gray-400 line-through text-xs">Bs. {product.comparePrice.toFixed(2)}</span>
@@ -123,9 +123,9 @@ export default function Catalog() {
                   <div className="flex justify-between items-center text-sm">
                     <div className="flex items-center gap-2">
                       <span className="text-gray-500 text-xs uppercase tracking-wider font-medium">
-                        {product.comparePrice ? 'Oferta' : 'Unidad'}
+                        {(product.comparePrice !== undefined && product.comparePrice > 0) ? 'Oferta' : 'Unidad'}
                       </span>
-                      {product.comparePrice && product.comparePrice > product.sellingPrice && (
+                      {product.comparePrice !== undefined && product.comparePrice > product.sellingPrice && (
                         <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-sm shadow-sm">
                           -{Math.round(((product.comparePrice - product.sellingPrice) / product.comparePrice) * 100)}%
                         </span>
