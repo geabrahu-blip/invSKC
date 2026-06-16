@@ -320,32 +320,35 @@ const Inventory = () => {
 
         {/* Stats Cards & Actions */}
         <div className="flex flex-col md:flex-row gap-4 items-center w-full sm:w-auto">
-          {isAdmin && (
-            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-              <button
-                onClick={handleSyncCatalog}
-                disabled={isSyncing}
-                className="w-full sm:w-auto px-4 py-2 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
-              >
-                {isSyncing ? 'Sincronizando...' : 'Sincronizar Catálogo'}
-              </button>
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            {isAdmin && (
+              <>
+                <button
+                  onClick={handleSyncCatalog}
+                  disabled={isSyncing}
+                  className="w-full sm:w-auto px-4 py-2 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                >
+                  {isSyncing ? 'Sincronizando...' : 'Sincronizar Catálogo'}
+                </button>
 
-              <button
-                onClick={handleReindex}
-                disabled={isReindexing}
-                className="w-full sm:w-auto px-4 py-2 bg-yellow-50 text-yellow-700 hover:bg-yellow-100 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
-              >
-                {isReindexing ? 'Reindexando...' : 'Reindexar Buscador'}
-              </button>
+                <button
+                  onClick={handleReindex}
+                  disabled={isReindexing}
+                  className="w-full sm:w-auto px-4 py-2 bg-yellow-50 text-yellow-700 hover:bg-yellow-100 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                >
+                  {isReindexing ? 'Reindexando...' : 'Reindexar Buscador'}
+                </button>
+              </>
+            )}
 
-              <button
-                onClick={() => setIsAddModalOpen(true)}
-                className="w-full sm:w-auto flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-              >
-                <Plus className="h-5 w-5" /> Agregar Producto Nuevo
-              </button>
-            </div>
-          )}
+            <button
+              onClick={() => setIsAddModalOpen(true)}
+              className="w-full sm:w-auto flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+            >
+              <Plus className="h-5 w-5" /> Agregar Producto Nuevo
+            </button>
+          </div>
+
           <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex items-center justify-between sm:justify-start gap-4 flex-1 sm:min-w-[160px]">
               <div className="flex items-center gap-4">
@@ -477,15 +480,13 @@ const Inventory = () => {
                   <Edit2 className="w-4 h-4" />
                   Stock
                 </button>
-                {isAdmin && (
-                  <button
-                    onClick={() => handleOpenEdit(product)}
-                    className="flex-1 flex justify-center items-center gap-2 py-3 bg-gray-50 text-gray-700 border border-gray-200 rounded-lg font-medium hover:bg-gray-100 transition-colors"
-                  >
-                    <PenTool className="w-4 h-4" />
-                    Editar
-                  </button>
-                )}
+                <button
+                  onClick={() => handleOpenEdit(product)}
+                  className="flex-1 flex justify-center items-center gap-2 py-3 bg-gray-50 text-gray-700 border border-gray-200 rounded-lg font-medium hover:bg-gray-100 transition-colors"
+                >
+                  <PenTool className="w-4 h-4" />
+                  Editar
+                </button>
               </div>
             </div>
           );
@@ -605,24 +606,23 @@ const Inventory = () => {
                         Stock
                       </button>
 
+                      <button
+                        onClick={() => handleOpenEdit(product)}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 bg-gray-50 text-gray-700 border border-gray-200 rounded-md hover:bg-gray-100 transition-colors"
+                        title="Editar detalles y precios"
+                      >
+                        <PenTool className="w-4 h-4" />
+                        Editar
+                      </button>
+
                       {isAdmin && (
-                        <>
-                          <button
-                            onClick={() => handleOpenEdit(product)}
-                            className="inline-flex items-center gap-1 px-3 py-1.5 bg-gray-50 text-gray-700 border border-gray-200 rounded-md hover:bg-gray-100 transition-colors"
-                            title="Editar detalles y precios"
-                          >
-                            <PenTool className="w-4 h-4" />
-                            Editar
-                          </button>
-                          <button
-                            onClick={() => handleDeleteItem(product.id)}
-                            className="inline-flex items-center p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600 rounded-md transition-colors ml-2"
-                            title="Eliminar registro"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </>
+                        <button
+                          onClick={() => handleDeleteItem(product.id)}
+                          className="inline-flex items-center p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600 rounded-md transition-colors ml-2"
+                          title="Eliminar registro"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       )}
                     </div>
                   </td>
