@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { getExpiringProducts, getStockEntries } from '../services/db';
 import { InventoryItem, FinancialLot } from '../types';
 import { Calendar, PackageOpen, DollarSign, AlertCircle, ArrowUpRight, PlusCircle, Activity } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 export default function Dashboard() {
+  const { isAdmin } = useAuth();
 
   // Rango de fechas por defecto: Últimos 30 días
   const today = new Date();
@@ -218,10 +220,12 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Financial Analytics Area */}
-      <div className="grid md:grid-cols-3 gap-6 mb-8">
+      {isAdmin && (
+        <>
+          {/* Financial Analytics Area */}
+          <div className="grid md:grid-cols-3 gap-6 mb-8">
 
-        {/* Total Investment Card */}
+            {/* Total Investment Card */}
         <div className="md:col-span-1 bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-2xl shadow-lg p-6 text-white flex flex-col justify-center relative overflow-hidden">
           <div className="absolute top-0 right-0 -mt-4 -mr-4 bg-white/10 w-32 h-32 rounded-full blur-2xl"></div>
           <div className="relative z-10">
@@ -265,15 +269,15 @@ export default function Dashboard() {
               ))}
             </div>
           )}
-        </div>
-      </div>
+            </div>
+          </div>
 
-      {/* Audit Log / Continuous Ledger */}
-      <div>
-        <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-          <Calendar className="w-5 h-5 text-gray-700" />
-          Registro Contable (Lotes)
-        </h2>
+          {/* Audit Log / Continuous Ledger */}
+          <div>
+            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-gray-700" />
+              Registro Contable (Lotes)
+            </h2>
 
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
           {filteredEntries.length === 0 ? (
@@ -316,10 +320,12 @@ export default function Dashboard() {
                   ))}
                 </tbody>
               </table>
+                </div>
+              )}
             </div>
-          )}
-        </div>
-      </div>
+          </div>
+        </>
+      )}
 
     </div>
   );
