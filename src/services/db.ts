@@ -20,13 +20,22 @@ import { Purchase, Product, InventoryItem, User, StockAdjustment, PublicCatalogI
 // Helper to get a random ID when not provided
 const generateId = () => doc(collection(db, 'dummy')).id;
 
+const removeFromPublicCatalog = async (id: string) => {
+  await deleteDoc(doc(db, 'public_catalog', id));
+};
+
 // Sync to Public Catalog
 const syncToPublicCatalog = async (item: InventoryItem) => {
   // We only sync items that belong to the main warehouse (bodega)
   if (item.storeId !== 'bodega') return;
 
-  const catalogRef = doc(db, 'public_catalog', item.id);
+  // Si se ha marcado para no mostrar en el catálogo, lo eliminamos y salimos
+  if (item.showInCatalog === false) {
+    await removeFromPublicCatalog(item.id);
+    return;
+  }
 
+  const catalogRef = doc(db, 'public_catalog', item.id);
 
   const publicItem: PublicCatalogItem = {
     id: item.id,
@@ -39,14 +48,12 @@ const syncToPublicCatalog = async (item: InventoryItem) => {
     inStock: item.units > 0,
     units: item.units || 0,
     wholesalePrice: item.wholesalePrice || 0,
-    sellingPrice: item.sellingPrice || 0
+    sellingPrice: item.sellingPrice || 0,
+    comparePrice: item.comparePrice || 0,
+    showInCatalog: true, // Si llegó aquí es porque no es explícitamente false
   };
 
   await setDoc(catalogRef, publicItem);
-};
-
-const removeFromPublicCatalog = async (id: string) => {
-  await deleteDoc(doc(db, 'public_catalog', id));
 };
 
 // Purchases
