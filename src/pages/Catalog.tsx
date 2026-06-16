@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { InventoryItem } from '../types';
 import { getInventoryItems } from '../services/db';
 import { Package, Search, Image as ImageIcon, Tags, Grid } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 export default function Catalog() {
+  const { isAdmin } = useAuth();
   const [products, setProducts] = useState<InventoryItem[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -108,7 +110,7 @@ export default function Catalog() {
                 </div>
 
                 <div className="pt-3 border-t border-gray-100 mt-auto space-y-1.5">
-                  {product.wholesalePrice > 0 && (
+                  {isAdmin && product.wholesalePrice > 0 && (
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-gray-500 text-xs uppercase tracking-wider font-medium">Por Mayor</span>
                       <span className="font-semibold text-blue-600">Bs. {product.wholesalePrice.toFixed(2)}</span>
