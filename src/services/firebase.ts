@@ -15,12 +15,15 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
+// Secondary App for creating users without logging out the primary session
+const secondaryApp = initializeApp(firebaseConfig, "Secondary");
 
 // Initialize Cloud Firestore and get a reference to the service
 export const db = getFirestore(app);
 
 // Initialize Firebase Authentication and get a reference to the service
 export const auth = getAuth(app);
+export const secondaryAuth = getAuth(secondaryApp);
 
 // Initialize Cloud Storage and get a reference to the service
 export const storage = getStorage(app);
