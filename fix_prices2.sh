@@ -1,0 +1,1 @@
+sed -i 's/onChange={(e) => setComparePrice(e.target.value !== '\'''\'' ? Number(e.target.value) : '\'''\'')}/onChange={(e) => setComparePrice(e.target.value !== '\'''\'' \&\& !isNaN(Number(e.target.value)) ? Number(e.target.value) : '\'''\'')}/g' src/components/ProductForm.tsx

@@ -1,0 +1,15 @@
+Hola Jules, en el repositorio del frontend/catálogo de SKC (skcweb), necesitamos asegurarnos de que el precio tachado (oferta) se muestre correctamente en el `ProductCard`.
+
+Los datos de la base de datos de Firebase ahora vienen asegurados en la colección `public_catalog` (o `inventory`, de donde estés leyendo) con los campos estrictamente como números.
+
+Los campos en los documentos de Firebase son:
+- `comparePrice`: Precio antes (el precio viejo/tachado). Es un número.
+- `sellingPrice`: Precio de venta actual. Es un número.
+
+Por favor, asegúrate de que en el componente `ProductCard.jsx` (o donde se renderice el precio):
+1. Verifiques que `comparePrice` exista y sea mayor que `sellingPrice` (`product.comparePrice > product.sellingPrice`).
+2. Si la condición se cumple, muestres el `sellingPrice` (con color resaltado, ej. verde) y, a su lado o arriba, el `comparePrice` tachado (`line-through`) y con un color más tenue (ej. gris).
+3. Asegúrate de forzar la conversión en el frontend en caso de ser necesario haciendo `const hasDiscount = Number(product.comparePrice) > Number(product.sellingPrice)`.
+4. Si quieres, también puedes mostrar un badge de descuento calculando el porcentaje: `Math.round(((Number(product.comparePrice) - Number(product.sellingPrice)) / Number(product.comparePrice)) * 100)%`.
+
+Por favor revisa el código de `ProductCard.jsx` e implementa este cambio para que los usuarios vean las ofertas correctamente. ¡Gracias!

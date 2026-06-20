@@ -1,0 +1,1 @@
+sed -i 's/comparePrice: comparePrice !== '\'''\'' ? Number(comparePrice) : undefined,/comparePrice: comparePrice !== '\'''\'' \&\& !isNaN(Number(comparePrice)) ? Number(comparePrice) : undefined,/g' src/components/ProductForm.tsx
