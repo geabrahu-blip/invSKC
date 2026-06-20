@@ -1,0 +1,1 @@
+sed -i 's/comparePrice: e.target.value !== '\'''\'' ? Number(e.target.value) : undefined/comparePrice: e.target.value !== '\'''\'' \&\& !isNaN(Number(e.target.value)) ? Number(e.target.value) : undefined/g' src/pages/Inventory.tsx

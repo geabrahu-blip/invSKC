@@ -184,7 +184,7 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
       units: Number(finalUnits),
       wholesalePrice: Number(finalWholesalePrice),
       sellingPrice: Number(sellingPrice),
-      comparePrice: comparePrice !== '' ? Number(comparePrice) : undefined,
+      comparePrice: comparePrice !== '' && !isNaN(Number(comparePrice)) ? Number(comparePrice) : undefined,
       totalPrice,
       minStock: finalMinStock !== '' ? Number(finalMinStock) : undefined,
       showInCatalog,
@@ -418,7 +418,7 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
               type="number"
               step="0.01"
               value={comparePrice}
-              onChange={(e) => setComparePrice(e.target.value !== '' ? Number(e.target.value) : '')}
+              onChange={(e) => setComparePrice(e.target.value !== '' && !isNaN(Number(e.target.value)) ? Number(e.target.value) : '')}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400 text-gray-500 line-through decoration-gray-400"
               placeholder="Ej. 150.00"
             />

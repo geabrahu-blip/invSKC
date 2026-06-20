@@ -49,7 +49,7 @@ const syncToPublicCatalog = async (item: InventoryItem) => {
     units: item.units || 0,
     wholesalePrice: item.wholesalePrice || 0,
     sellingPrice: item.sellingPrice || 0,
-    comparePrice: item.comparePrice || 0,
+    comparePrice: Number(item.comparePrice) || 0,
     showInCatalog: true, // Si llegó aquí es porque no es explícitamente false
   };
 
@@ -137,10 +137,23 @@ const sanitizeForFirestore = <T extends Record<string, unknown>>(obj: T): T => {
     }
   });
 
+  // Force specific price fields to be strictly numbers if they exist
+  const numberFields = ['priceBs', 'wholesalePrice', 'sellingPrice', 'comparePrice', 'units', 'totalPrice', 'minStock'];
+  numberFields.forEach(field => {
+    if (sanitized[field] !== undefined && sanitized[field] !== null && sanitized[field] !== '') {
+      (sanitized as Record<string, unknown>)[field] = Number(sanitized[field]);
+      if (isNaN((sanitized as Record<string, number>)[field])) {
+        delete sanitized[field]; // Remove if it's completely invalid text
+      }
+    }
+  });
+
   // Remove completely undefined numeric or complex fields to prevent crash
   Object.keys(sanitized).forEach(key => {
-    if (sanitized[key] === undefined) {
-      delete sanitized[key];
+    if (sanitized[key] === undefined || sanitized[key] === '') {
+      if (!stringFields.includes(key)) {
+         delete sanitized[key];
+      }
     }
   });
 
