@@ -103,3 +103,17 @@ export interface FinancialLot {
   date: string; // YYYY-MM-DD for UI filtering
   timestamp: number; // Strict chronological sorting
 }
+
+export interface RestockRequest {
+  id: string;
+  productId: string;
+  productName: string;
+  image: string;
+  brand?: string;
+  category?: string;
+  presentation?: string;
+  requestedUnits: number;
+  requestedBy: string; // User name
+  status: 'PENDING' | 'COMPLETED';
+  createdAt: number;
+}

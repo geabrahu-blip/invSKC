@@ -11,11 +11,12 @@ import {
   startAfter,
   orderBy,
   QueryDocumentSnapshot,
-  DocumentData
+  DocumentData,
+  updateDoc
 } from 'firebase/firestore';
 import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 import { db, storage } from './firebase';
-import { Purchase, Product, InventoryItem, User, StockAdjustment, PublicCatalogItem, FinancialLot } from '../types';
+import { Purchase, Product, InventoryItem, User, StockAdjustment, PublicCatalogItem, FinancialLot, RestockRequest } from '../types';
 
 // Helper to get a random ID when not provided
 const generateId = () => doc(collection(db, 'dummy')).id;
@@ -640,6 +641,33 @@ export const getUserByUsername = async (username: string): Promise<User | null> 
   const querySnapshot = await getDocs(q);
   if (querySnapshot.empty) return null;
   return querySnapshot.docs[0].data() as User;
+};
+
+// --- Restock Requests ---
+export const getRestockRequests = async (): Promise<RestockRequest[]> => {
+  const q = query(collection(db, 'restock_requests'), orderBy('createdAt', 'desc'));
+  const querySnapshot = await getDocs(q);
+  return querySnapshot.docs.map(doc => doc.data() as RestockRequest);
+};
+
+export const addRestockRequest = async (request: Omit<RestockRequest, 'id' | 'createdAt' | 'status'>): Promise<RestockRequest> => {
+  const id = generateId();
+  const newRequest: RestockRequest = {
+    ...request,
+    id,
+    status: 'PENDING',
+    createdAt: Date.now(),
+  };
+  await setDoc(doc(db, 'restock_requests', id), sanitizeForFirestore(newRequest as unknown as Record<string, unknown>));
+  return newRequest;
+};
+
+export const updateRestockRequestStatus = async (id: string, status: 'PENDING' | 'COMPLETED'): Promise<void> => {
+  await updateDoc(doc(db, 'restock_requests', id), { status });
+};
+
+export const deleteRestockRequest = async (id: string): Promise<void> => {
+  await deleteDoc(doc(db, 'restock_requests', id));
 };
 
 // Database Reset

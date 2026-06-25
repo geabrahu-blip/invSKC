@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getExpiringProducts, getStockEntries } from '../services/db';
 import { InventoryItem, FinancialLot } from '../types';
-import { Calendar, PackageOpen, DollarSign, AlertCircle, ArrowUpRight, PlusCircle, Activity } from 'lucide-react';
+import { Calendar, PackageOpen, DollarSign, AlertCircle, ArrowUpRight, PlusCircle, Activity, Package } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function Dashboard() {
@@ -148,15 +148,26 @@ export default function Dashboard() {
               <ul className="divide-y divide-red-100/50 max-h-60 overflow-y-auto pr-1">
                 {expired.map(p => (
                   <li key={p.id} className="py-2 flex justify-between items-start">
-                    <div>
-                      <p className="font-medium text-red-900 text-sm leading-tight">
-                        {p.name} <span className="text-red-500 font-normal text-xs ml-1">({p.counter})</span>
-                      </p>
-                      {p.brand && <p className="text-xs text-red-700 opacity-80 mt-0.5">{p.brand}</p>}
+                    <div className="flex items-center gap-2">
+                      <div className="w-10 h-10 bg-white rounded-md flex items-center justify-center border border-red-100 shrink-0 overflow-hidden">
+                        {p.image ? (
+                          <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <Package className="w-5 h-5 text-red-300" />
+                        )}
+                      </div>
+                      <div>
+                        <p className="font-medium text-red-900 text-sm leading-tight">
+                          {p.name} <span className="text-red-500 font-normal text-xs ml-1">({p.counter})</span>
+                        </p>
+                        {p.brand && <p className="text-xs text-red-700 opacity-80 mt-0.5">{p.brand}</p>}
+                      </div>
                     </div>
-                    <span className="font-bold text-red-900 text-sm ml-2 bg-red-100 px-1.5 py-0.5 rounded shrink-0">
-                      {p.units} un.
-                    </span>
+                    {isAdmin && (
+                      <span className="font-bold text-red-900 text-sm ml-2 bg-red-100 px-1.5 py-0.5 rounded shrink-0">
+                        {p.units} un.
+                      </span>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -175,15 +186,26 @@ export default function Dashboard() {
               <ul className="divide-y divide-orange-100/50 max-h-60 overflow-y-auto pr-1">
                 {highRisk.map(p => (
                   <li key={p.id} className="py-2 flex justify-between items-start">
-                    <div>
-                      <p className="font-medium text-orange-900 text-sm leading-tight">
-                        {p.name} <span className="text-orange-500 font-normal text-xs ml-1">({p.counter})</span>
-                      </p>
-                      {p.brand && <p className="text-xs text-orange-700 opacity-80 mt-0.5">{p.brand}</p>}
+                    <div className="flex items-center gap-2">
+                      <div className="w-10 h-10 bg-white rounded-md flex items-center justify-center border border-orange-100 shrink-0 overflow-hidden">
+                        {p.image ? (
+                          <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <Package className="w-5 h-5 text-orange-300" />
+                        )}
+                      </div>
+                      <div>
+                        <p className="font-medium text-orange-900 text-sm leading-tight">
+                          {p.name} <span className="text-orange-500 font-normal text-xs ml-1">({p.counter})</span>
+                        </p>
+                        {p.brand && <p className="text-xs text-orange-700 opacity-80 mt-0.5">{p.brand}</p>}
+                      </div>
                     </div>
-                    <span className="font-bold text-orange-900 text-sm ml-2 bg-orange-100 px-1.5 py-0.5 rounded shrink-0">
-                      {p.units} un.
-                    </span>
+                    {isAdmin && (
+                      <span className="font-bold text-orange-900 text-sm ml-2 bg-orange-100 px-1.5 py-0.5 rounded shrink-0">
+                        {p.units} un.
+                      </span>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -202,15 +224,26 @@ export default function Dashboard() {
               <ul className="divide-y divide-yellow-100/50 max-h-60 overflow-y-auto pr-1">
                 {mediumRisk.map(p => (
                   <li key={p.id} className="py-2 flex justify-between items-start">
-                    <div>
-                      <p className="font-medium text-yellow-900 text-sm leading-tight">
-                        {p.name} <span className="text-yellow-600 font-normal text-xs ml-1">({p.counter})</span>
-                      </p>
-                      {p.brand && <p className="text-xs text-yellow-700 opacity-80 mt-0.5">{p.brand}</p>}
+                    <div className="flex items-center gap-2">
+                      <div className="w-10 h-10 bg-white rounded-md flex items-center justify-center border border-yellow-100 shrink-0 overflow-hidden">
+                        {p.image ? (
+                          <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <Package className="w-5 h-5 text-yellow-400" />
+                        )}
+                      </div>
+                      <div>
+                        <p className="font-medium text-yellow-900 text-sm leading-tight">
+                          {p.name} <span className="text-yellow-600 font-normal text-xs ml-1">({p.counter})</span>
+                        </p>
+                        {p.brand && <p className="text-xs text-yellow-700 opacity-80 mt-0.5">{p.brand}</p>}
+                      </div>
                     </div>
-                    <span className="font-bold text-yellow-900 text-sm ml-2 bg-yellow-100 px-1.5 py-0.5 rounded shrink-0">
-                      {p.units} un.
-                    </span>
+                    {isAdmin && (
+                      <span className="font-bold text-yellow-900 text-sm ml-2 bg-yellow-100 px-1.5 py-0.5 rounded shrink-0">
+                        {p.units} un.
+                      </span>
+                    )}
                   </li>
                 ))}
               </ul>

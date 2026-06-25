@@ -11,6 +11,7 @@ const PurchaseDetail = lazy(() => import('./pages/PurchaseDetail'));
 const Inventory = lazy(() => import('./pages/Inventory'));
 const Catalog = lazy(() => import('./pages/Catalog'));
 const Users = lazy(() => import('./pages/Users'));
+const RestockRequests = lazy(() => import('./pages/RestockRequests'));
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
                 <Route path="/purchases/:id" element={<PurchaseDetail />} />
                 <Route path="/inventory" element={<Inventory />} />
                 <Route path="/catalog" element={<Catalog />} />
+                <Route path="/restock" element={<RestockRequests />} />
                 <Route path="/users" element={<Users />} />
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
               </Route>
