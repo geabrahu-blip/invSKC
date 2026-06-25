@@ -477,13 +477,15 @@ const Inventory = () => {
 
               {/* Botones Grandes Táctiles */}
               <div className="p-4 flex gap-3">
-                <button
-                  onClick={() => handleOpenAdjustStock(product)}
-                  className="flex-1 flex justify-center items-center gap-2 py-3 bg-indigo-50 text-indigo-700 rounded-lg font-medium hover:bg-indigo-100 transition-colors"
-                >
-                  <Edit2 className="w-4 h-4" />
-                  Stock
-                </button>
+                {isAdmin && (
+                  <button
+                    onClick={() => handleOpenAdjustStock(product)}
+                    className="flex-1 flex justify-center items-center gap-2 py-3 bg-indigo-50 text-indigo-700 rounded-lg font-medium hover:bg-indigo-100 transition-colors"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                    Stock
+                  </button>
+                )}
                 <button
                   onClick={() => handleOpenEdit(product)}
                   className="flex-1 flex justify-center items-center gap-2 py-3 bg-gray-50 text-gray-700 border border-gray-200 rounded-lg font-medium hover:bg-gray-100 transition-colors"
@@ -603,14 +605,16 @@ const Inventory = () => {
 
                   <td className="px-6 py-4 text-center">
                     <div className="flex items-center justify-center gap-2">
-                      <button
-                        onClick={() => handleOpenAdjustStock(product)}
-                        className="inline-flex items-center gap-1 px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-md hover:bg-indigo-100 transition-colors"
-                        title="Ajustar stock (Quitar / Añadir)"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                        Stock
-                      </button>
+                      {isAdmin && (
+                        <button
+                          onClick={() => handleOpenAdjustStock(product)}
+                          className="inline-flex items-center gap-1 px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-md hover:bg-indigo-100 transition-colors"
+                          title="Ajustar stock (Quitar / Añadir)"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                          Stock
+                        </button>
+                      )}
 
                       <button
                         onClick={() => handleOpenEdit(product)}
