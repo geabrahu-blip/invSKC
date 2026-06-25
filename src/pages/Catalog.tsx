@@ -79,13 +79,15 @@ export default function Catalog() {
                   <ImageIcon className="h-12 w-12 text-gray-300" />
                 )}
 
-                <div className="absolute top-2 right-2">
-                  <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-bold shadow-sm ${
-                    product.units > 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
-                  }`}>
-                    Stock: {product.units}
-                  </span>
-                </div>
+                {isAdmin && (
+                  <div className="absolute top-2 right-2">
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-bold shadow-sm ${
+                      product.units > 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
+                    }`}>
+                      Stock: {product.units}
+                    </span>
+                  </div>
+                )}
               </div>
 
               <div className="p-4 flex flex-col flex-grow">

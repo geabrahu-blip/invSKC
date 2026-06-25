@@ -51,6 +51,12 @@ export default function Layout() {
               >
                 Catálogo Visual
               </Link>
+              <Link
+                to="/restock"
+                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive('/restock') ? 'bg-indigo-100 text-indigo-700' : 'text-gray-600 hover:bg-gray-100'}`}
+              >
+                Pedidos Reposición
+              </Link>
               {user.role === 'admin' && (
                 <Link
                   to="/users"
@@ -106,6 +112,12 @@ export default function Layout() {
               className={`snap-start shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${isActive('/catalog') ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-50 text-gray-600 border border-gray-200'}`}
             >
               Catálogo Visual
+            </Link>
+            <Link
+              to="/restock"
+              className={`snap-start shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${isActive('/restock') ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-50 text-gray-600 border border-gray-200'}`}
+            >
+              Pedidos Reposición
             </Link>
             {user.role === 'admin' && (
               <Link

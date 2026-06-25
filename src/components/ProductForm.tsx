@@ -164,7 +164,13 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
     const finalUnits = isAdmin ? units : 0;
     const finalMinStock = isAdmin ? minStock : 0;
 
-    if (!name || finalPriceBs === '' || finalUnits === '' || finalWholesalePrice === '' || sellingPrice === '') {
+    // Remove finalUnits and finalPriceBs from the strict validation if not admin
+    if (!name || sellingPrice === '') {
+      alert("Por favor, asegúrate de llenar todos los campos requeridos.");
+      return;
+    }
+
+    if (isAdmin && (finalPriceBs === '' || finalUnits === '' || finalWholesalePrice === '')) {
       alert("Por favor, asegúrate de llenar todos los campos requeridos con valores numéricos válidos.");
       return;
     }

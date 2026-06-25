@@ -362,17 +362,19 @@ const Inventory = () => {
               </div>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex items-center justify-between sm:justify-start gap-4 flex-1 sm:min-w-[160px]">
-              <div className="flex items-center gap-4">
-                <div className="bg-emerald-50 p-3 rounded-lg text-emerald-600">
-                  <Archive className="w-6 h-6" />
-                </div>
-                <div>
-                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Total de Unidades</p>
-                  <p className="text-2xl font-bold text-gray-900">{totalUnits}</p>
+            {isAdmin && (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex items-center justify-between sm:justify-start gap-4 flex-1 sm:min-w-[160px]">
+                <div className="flex items-center gap-4">
+                  <div className="bg-emerald-50 p-3 rounded-lg text-emerald-600">
+                    <Archive className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Total de Unidades</p>
+                    <p className="text-2xl font-bold text-gray-900">{totalUnits}</p>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
@@ -426,19 +428,21 @@ const Inventory = () => {
                     {product.presentation && <span className="bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded">{product.presentation}</span>}
                   </div>
                 </div>
-                <div className="flex flex-col items-center justify-center shrink-0 min-w-[3rem]">
-                  {isCritical ? (
-                    <>
-                      <span className="flex items-center gap-1 font-bold text-red-600 text-lg">
-                        <AlertTriangle className="w-4 h-4" />
-                        {product.units}
-                      </span>
-                      <span className="text-[10px] text-red-500 font-medium">Mín: {product.minStock}</span>
-                    </>
-                  ) : (
-                    <span className="font-bold text-gray-900 text-xl">{product.units}</span>
-                  )}
-                </div>
+                {isAdmin && (
+                  <div className="flex flex-col items-center justify-center shrink-0 min-w-[3rem]">
+                    {isCritical ? (
+                      <>
+                        <span className="flex items-center gap-1 font-bold text-red-600 text-lg">
+                          <AlertTriangle className="w-4 h-4" />
+                          {product.units}
+                        </span>
+                        <span className="text-[10px] text-red-500 font-medium">Mín: {product.minStock}</span>
+                      </>
+                    ) : (
+                      <span className="font-bold text-gray-900 text-xl">{product.units}</span>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Bloque de Precios en 2 Columnas */}
@@ -510,7 +514,7 @@ const Inventory = () => {
             <thead className="bg-gray-50 text-gray-600 font-medium border-b border-gray-200 uppercase text-xs tracking-wider">
               <tr>
                 <th className="px-6 py-4 w-1/3">Producto</th>
-                <th className="px-6 py-4 text-center w-32">Stock</th>
+                {isAdmin && <th className="px-6 py-4 text-center w-32">Stock</th>}
                 <th className="px-6 py-4 text-right w-40">Costo Base</th>
                 <th className="px-6 py-4 text-right w-48">Precios de Venta</th>
                 <th className="px-6 py-4 text-center w-40">Acciones</th>
@@ -541,19 +545,21 @@ const Inventory = () => {
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-center">
-                    {isCritical ? (
-                      <div className="flex flex-col items-center justify-center">
-                        <span className="flex items-center gap-1 font-bold text-red-600 text-lg">
-                          <AlertTriangle className="w-4 h-4" />
-                          {product.units}
-                        </span>
-                        <span className="text-xs text-red-500 font-medium">Mín: {product.minStock}</span>
-                      </div>
-                    ) : (
-                      <span className="font-medium text-gray-900 text-lg">{product.units}</span>
-                    )}
-                  </td>
+                  {isAdmin && (
+                    <td className="px-6 py-4 text-center">
+                      {isCritical ? (
+                        <div className="flex flex-col items-center justify-center">
+                          <span className="flex items-center gap-1 font-bold text-red-600 text-lg">
+                            <AlertTriangle className="w-4 h-4" />
+                            {product.units}
+                          </span>
+                          <span className="text-xs text-red-500 font-medium">Mín: {product.minStock}</span>
+                        </div>
+                      ) : (
+                        <span className="font-medium text-gray-900 text-lg">{product.units}</span>
+                      )}
+                    </td>
+                  )}
 
                   {/* Columna: Costo Base */}
                   {isAdmin && (
