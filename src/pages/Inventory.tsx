@@ -920,12 +920,21 @@ const Inventory = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Categoría</label>
-                  <input
-                    type="text"
+                  <select
                     value={editForm.category || ''}
                     onChange={(e) => setEditForm({...editForm, category: e.target.value})}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
-                  />
+                  >
+                    <option value="">Seleccionar categoría...</option>
+                    <option value="Limpiadores / Gel Limpiador">Limpiadores / Gel Limpiador</option>
+                    <option value="Sérums / Tratamientos">Sérums / Tratamientos</option>
+                    <option value="Hidratantes / Cremas">Hidratantes / Cremas</option>
+                    <option value="Protectores Solares / Fotoprotección">Protectores Solares / Fotoprotección</option>
+                    <option value="Tónicos / Esencias">Tónicos / Esencias</option>
+                    <option value="Contorno de Ojos">Contorno de Ojos</option>
+                    <option value="Cuidado Corporal / Body Milk">Cuidado Corporal / Body Milk</option>
+                    <option value="Otros">Otros...</option>
+                  </select>
                 </div>
 
                 <div>
