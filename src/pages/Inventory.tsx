@@ -852,17 +852,17 @@ const Inventory = () => {
       {isEditModalOpen && selectedProduct && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 backdrop-blur-sm overflow-y-auto">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl overflow-hidden my-4 sm:my-8">
-            <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center sticky top-0 bg-white z-10">
-              <h2 className="text-xl font-semibold text-gray-900">Editar Detalles del Producto</h2>
+            <div className="px-4 py-3 border-b border-gray-200 flex justify-between items-center sticky top-0 bg-white z-10">
+              <h2 className="text-lg font-semibold text-gray-900">Editar Detalles del Producto</h2>
               <button onClick={() => setIsEditModalOpen(false)} className="text-gray-400 hover:text-gray-600">
                 &times;
               </button>
             </div>
 
-            <form onSubmit={handleSaveEdit} className="p-6 space-y-4">
+            <form onSubmit={handleSaveEdit} className="p-4 space-y-3">
               {/* Image Upload */}
-              <div className="flex gap-4 items-start mb-6">
-                <div className="w-24 h-24 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center bg-gray-50 overflow-hidden shrink-0">
+              <div className="flex gap-3 items-start mb-4">
+                <div className="w-16 h-16 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center bg-gray-50 overflow-hidden shrink-0">
                   {editForm.image ? (
                     <img
                       src={editForm.image}
@@ -871,59 +871,59 @@ const Inventory = () => {
                       crossOrigin="anonymous"
                     />
                   ) : (
-                    <ImageIcon className="h-8 w-8 text-gray-400" />
+                    <ImageIcon className="h-6 w-6 text-gray-400" />
                   )}
                 </div>
                 <div className="flex-1">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Actualizar Imagen</label>
+                  <label className="block text-xs font-medium text-gray-700 mb-0.5">Actualizar Imagen</label>
                   <input
                     type="file"
                     accept="image/*"
                     onChange={handleImageUpload}
-                    className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+                    className="w-full text-xs text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+                  <label className="block text-xs font-medium text-gray-700 mb-0.5">Nombre</label>
                   <input
                     type="text"
                     required
                     value={editForm.name || ''}
                     onChange={(e) => setEditForm({...editForm, name: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
                   />
                 </div>
 
                 <div className="md:col-span-1">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Código (SKU/Balanza)</label>
+                  <label className="block text-xs font-medium text-gray-700 mb-0.5">Código (SKU/Balanza)</label>
                   <input
                     type="text"
                     value={editForm.sku || ''}
                     onChange={(e) => setEditForm({...editForm, sku: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 bg-indigo-50"
+                    className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 bg-indigo-50"
                     placeholder="Ej. CERA-100"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Marca</label>
+                  <label className="block text-xs font-medium text-gray-700 mb-0.5">Marca</label>
                   <input
                     type="text"
                     value={editForm.brand || ''}
                     onChange={(e) => setEditForm({...editForm, brand: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Categoría</label>
+                  <label className="block text-xs font-medium text-gray-700 mb-0.5">Categoría</label>
                   <select
                     value={editForm.category || ''}
                     onChange={(e) => setEditForm({...editForm, category: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
                   >
                     <option value="">Seleccionar categoría...</option>
                     <option value="Limpiadores / Gel Limpiador">Limpiadores / Gel Limpiador</option>
@@ -938,28 +938,28 @@ const Inventory = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Presentación (ml/g)</label>
+                  <label className="block text-xs font-medium text-gray-700 mb-0.5">Presentación (ml/g)</label>
                   <input
                     type="text"
                     value={editForm.presentation || ''}
                     onChange={(e) => setEditForm({...editForm, presentation: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Vencimiento</label>
+                  <label className="block text-xs font-medium text-gray-700 mb-0.5">Vencimiento</label>
                   <input
                     type="date"
                     value={editForm.expirationDate || ''}
                     onChange={(e) => setEditForm({...editForm, expirationDate: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
                   />
                 </div>
               </div>
 
               {/* Detalles del Catálogo (Skincare) */}
-              <div className="pt-4 mt-4 border-t border-gray-200">
+              <div className="pt-3 mt-3 border-t border-gray-200">
                 <div className="flex items-center justify-between mb-2">
                   <label htmlFor="smart-paste-edit" className="block text-sm font-medium text-purple-700 flex items-center gap-1">
                     ✨ Pegado Rápido Gemini
@@ -981,49 +981,49 @@ const Inventory = () => {
                   rows={2}
                   value={smartPasteText}
                   onChange={(e) => handleSmartPaste(e.target.value)}
-                  className="w-full px-3 py-2 border border-purple-200 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 bg-purple-50 text-sm mb-4"
+                  className="w-full px-2 py-1.5 border border-purple-200 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 bg-purple-50 text-sm mb-3"
                   placeholder="Pega aquí el texto generado por Gemini..."
                 />
 
                 {showDetails && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg border border-gray-100 mb-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-3 bg-gray-50 rounded-lg border border-gray-100 mb-3">
                     <div className="col-span-1">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de Piel</label>
+                      <label className="block text-xs font-medium text-gray-700 mb-0.5">Tipo de Piel</label>
                       <input
                         type="text"
                         value={editForm.skinType || ''}
                         onChange={(e) => setEditForm({...editForm, skinType: e.target.value})}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         placeholder="Ej. Mixta a grasa"
                       />
                     </div>
                     <div className="col-span-1">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Beneficios</label>
+                      <label className="block text-xs font-medium text-gray-700 mb-0.5">Beneficios</label>
                       <input
                         type="text"
                         value={editForm.benefits || ''}
                         onChange={(e) => setEditForm({...editForm, benefits: e.target.value})}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         placeholder="Ej. Controla el sebo y reduce imperfecciones"
                       />
                     </div>
                     <div className="col-span-1">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Ingredientes Clave</label>
+                      <label className="block text-xs font-medium text-gray-700 mb-0.5">Ingredientes Clave</label>
                       <input
                         type="text"
                         value={editForm.keyIngredients || ''}
                         onChange={(e) => setEditForm({...editForm, keyIngredients: e.target.value})}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         placeholder="Ej. Ácido Salicílico, Zinc"
                       />
                     </div>
                     <div className="col-span-1">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Modo de Uso</label>
+                      <label className="block text-xs font-medium text-gray-700 mb-0.5">Modo de Uso</label>
                       <input
                         type="text"
                         value={editForm.usage || ''}
                         onChange={(e) => setEditForm({...editForm, usage: e.target.value})}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         placeholder="Ej. Aplicar mañana y noche sobre el rostro húmedo"
                       />
                     </div>
@@ -1031,60 +1031,65 @@ const Inventory = () => {
                 )}
               </div>
 
-              <div className="pt-4 mt-4 border-t border-gray-200">
-                <h3 className="font-medium text-gray-900 mb-4">Actualización de Precios</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="col-span-1 md:col-span-2 lg:col-span-4 flex items-center mb-4">
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        className="sr-only peer"
-                        checked={editForm.showInCatalog !== false}
-                        onChange={(e) => setEditForm({ ...editForm, showInCatalog: e.target.checked })}
-                      />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
-                      <span className="ml-3 text-sm font-medium text-gray-700">Mostrar en Catálogo Público</span>
+              <div className="pt-3 mt-3 border-t border-gray-200">
+                <h3 className="text-sm font-medium text-gray-900 mb-3">Actualización de Precios</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                  <div className="col-span-1 md:col-span-2 lg:col-span-4 flex items-center mb-2">
+                    <label className="flex items-center cursor-pointer">
+                      <div className="relative">
+                        <input
+                          type="checkbox"
+                          className="sr-only"
+                          checked={editForm.showInCatalog !== false}
+                          onChange={(e) => setEditForm({ ...editForm, showInCatalog: e.target.checked })}
+                        />
+                        <div className={`block w-8 h-5 rounded-full transition-colors ${editForm.showInCatalog !== false ? 'bg-indigo-600' : 'bg-gray-300'}`}></div>
+                        <div className={`dot absolute left-1 top-1 bg-white w-3 h-3 rounded-full transition-transform ${editForm.showInCatalog !== false ? 'transform translate-x-3' : ''}`}></div>
+                      </div>
+                      <div className="ml-2 text-xs font-medium text-gray-700">
+                        Mostrar en Catálogo Público
+                      </div>
                     </label>
                   </div>
                   {isAdmin && (
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Costo (Bs)</label>
+                      <label className="block text-xs font-medium text-gray-700 mb-0.5">Costo (Bs)</label>
                       <input
                         type="number"
                         step="0.01"
                         required={isAdmin}
                         value={editForm.priceBs || ''}
                         onChange={(e) => setEditForm({...editForm, priceBs: Number(e.target.value)})}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                        className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
                       />
                     </div>
                   )}
                   {isAdmin && (
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Venta Mayor (Bs)</label>
+                      <label className="block text-xs font-medium text-gray-700 mb-0.5">Venta Mayor (Bs)</label>
                       <input
                         type="number"
                         step="0.01"
                         required={isAdmin}
                         value={editForm.wholesalePrice || ''}
                         onChange={(e) => setEditForm({...editForm, wholesalePrice: Number(e.target.value)})}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                        className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
                       />
                     </div>
                   )}
                   <div>
-                    <label htmlFor="inv-compare-price" className="block text-sm font-medium text-gray-700 mb-1">Precio Antes (Oferta)</label>
+                    <label htmlFor="inv-compare-price" className="block text-xs font-medium text-gray-700 mb-0.5">Precio Antes (Oferta)</label>
                     <input
                       id="inv-compare-price"
                       type="number"
                       step="0.01"
                       value={editForm.comparePrice || ''}
                       onChange={(e) => setEditForm({...editForm, comparePrice: e.target.value !== '' && !isNaN(Number(e.target.value)) ? Number(e.target.value) : undefined})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                      className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
                     />
                   </div>
                   <div>
-                    <label htmlFor="inv-selling-price" className="block text-sm font-medium text-gray-700 mb-1">Venta Unidad (Bs)</label>
+                    <label htmlFor="inv-selling-price" className="block text-xs font-medium text-gray-700 mb-0.5">Venta Unidad (Bs)</label>
                     <input
                       id="inv-selling-price"
                       type="number"
@@ -1092,23 +1097,23 @@ const Inventory = () => {
                       required
                       value={editForm.sellingPrice || ''}
                       onChange={(e) => setEditForm({...editForm, sellingPrice: Number(e.target.value)})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                      className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
                     />
                   </div>
                 </div>
               </div>
 
-              <div className="pt-6 flex gap-3 justify-end sticky bottom-0 bg-white">
+              <div className="pt-4 flex gap-2 justify-end sticky bottom-0 bg-white border-t border-gray-100 mt-2 p-2 pb-0">
                 <button
                   type="button"
                   onClick={() => setIsEditModalOpen(false)}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                  className="px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
+                  className="px-4 py-1.5 text-xs font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
                 >
                   Guardar Cambios
                 </button>
