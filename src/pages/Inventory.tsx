@@ -173,16 +173,16 @@ const Inventory = () => {
   const handleSmartPaste = (text: string) => {
     setSmartPasteText(text);
 
-    const skinTypeMatch = text.match(/\*?\*?Tipo de piel:\*?\*?\s*(.*)/i);
+    const skinTypeMatch = text.match(/\*?\*?Tipo de piel:\*?\*?\s*(.*?)(?=\*?\*?Beneficios:|\*?\*?Ingredientes clave:|\*?\*?Modo de uso:|$)/is);
     const skinType = skinTypeMatch && skinTypeMatch[1] ? skinTypeMatch[1].trim() : editForm.skinType;
 
-    const benefitsMatch = text.match(/\*?\*?Beneficios:\*?\*?\s*(.*)/i);
+    const benefitsMatch = text.match(/\*?\*?Beneficios:\*?\*?\s*(.*?)(?=\*?\*?Tipo de piel:|\*?\*?Ingredientes clave:|\*?\*?Modo de uso:|$)/is);
     const benefits = benefitsMatch && benefitsMatch[1] ? benefitsMatch[1].trim() : editForm.benefits;
 
-    const ingredientsMatch = text.match(/\*?\*?Ingredientes clave:\*?\*?\s*(.*)/i);
+    const ingredientsMatch = text.match(/\*?\*?Ingredientes clave:\*?\*?\s*(.*?)(?=\*?\*?Tipo de piel:|\*?\*?Beneficios:|\*?\*?Modo de uso:|$)/is);
     const keyIngredients = ingredientsMatch && ingredientsMatch[1] ? ingredientsMatch[1].trim() : editForm.keyIngredients;
 
-    const usageMatch = text.match(/\*?\*?Modo de uso:\*?\*?\s*(.*)/i);
+    const usageMatch = text.match(/\*?\*?Modo de uso:\*?\*?\s*(.*?)(?=\*?\*?Tipo de piel:|\*?\*?Beneficios:|\*?\*?Ingredientes clave:|$)/is);
     const usage = usageMatch && usageMatch[1] ? usageMatch[1].trim() : editForm.usage;
 
     setEditForm({
