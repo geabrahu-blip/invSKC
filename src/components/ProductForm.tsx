@@ -128,16 +128,16 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
   const handleSmartPaste = (text: string) => {
     setSmartPasteText(text);
 
-    const skinTypeMatch = text.match(/\*?\*?Tipo de piel:\*?\*?\s*(.*)/i);
+    const skinTypeMatch = text.match(/\*?\*?Tipo de piel:\*?\*?\s*(.*?)(?=\*?\*?Beneficios:|\*?\*?Ingredientes clave:|\*?\*?Modo de uso:|$)/is);
     if (skinTypeMatch && skinTypeMatch[1]) setSkinType(skinTypeMatch[1].trim());
 
-    const benefitsMatch = text.match(/\*?\*?Beneficios:\*?\*?\s*(.*)/i);
+    const benefitsMatch = text.match(/\*?\*?Beneficios:\*?\*?\s*(.*?)(?=\*?\*?Tipo de piel:|\*?\*?Ingredientes clave:|\*?\*?Modo de uso:|$)/is);
     if (benefitsMatch && benefitsMatch[1]) setBenefits(benefitsMatch[1].trim());
 
-    const ingredientsMatch = text.match(/\*?\*?Ingredientes clave:\*?\*?\s*(.*)/i);
+    const ingredientsMatch = text.match(/\*?\*?Ingredientes clave:\*?\*?\s*(.*?)(?=\*?\*?Tipo de piel:|\*?\*?Beneficios:|\*?\*?Modo de uso:|$)/is);
     if (ingredientsMatch && ingredientsMatch[1]) setKeyIngredients(ingredientsMatch[1].trim());
 
-    const usageMatch = text.match(/\*?\*?Modo de uso:\*?\*?\s*(.*)/i);
+    const usageMatch = text.match(/\*?\*?Modo de uso:\*?\*?\s*(.*?)(?=\*?\*?Tipo de piel:|\*?\*?Beneficios:|\*?\*?Ingredientes clave:|$)/is);
     if (usageMatch && usageMatch[1]) setUsage(usageMatch[1].trim());
   };
 
