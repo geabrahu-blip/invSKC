@@ -28,6 +28,13 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
   const [minStock, setMinStock] = useState<number | ''>('');
   const [showInCatalog, setShowInCatalog] = useState<boolean>(true);
 
+  // Skincare Specific Fields
+  const [skinType, setSkinType] = useState('');
+  const [benefits, setBenefits] = useState('');
+  const [keyIngredients, setKeyIngredients] = useState('');
+  const [usage, setUsage] = useState('');
+  const [smartPasteText, setSmartPasteText] = useState('');
+
   const [existingItems, setExistingItems] = useState<InventoryItem[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const suggestionRef = useRef<HTMLDivElement>(null);
@@ -66,6 +73,10 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
       setComparePrice(editingProduct.comparePrice ?? '');
       setMinStock(editingProduct.minStock ?? '');
       setShowInCatalog(editingProduct.showInCatalog ?? true);
+      setSkinType(editingProduct.skinType || '');
+      setBenefits(editingProduct.benefits || '');
+      setKeyIngredients(editingProduct.keyIngredients || '');
+      setUsage(editingProduct.usage || '');
     } else {
       resetForm();
     }
@@ -86,6 +97,11 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
     setComparePrice('');
     setMinStock('');
     setShowInCatalog(true);
+    setSkinType('');
+    setBenefits('');
+    setKeyIngredients('');
+    setUsage('');
+    setSmartPasteText('');
   };
 
   const handleSuggestionSelect = (item: InventoryItem) => {
@@ -101,7 +117,27 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
     if (item.minStock !== undefined) setMinStock(item.minStock);
     if (item.showInCatalog !== undefined) setShowInCatalog(item.showInCatalog);
     if (item.image) setImage(item.image);
+    setSkinType(item.skinType || '');
+    setBenefits(item.benefits || '');
+    setKeyIngredients(item.keyIngredients || '');
+    setUsage(item.usage || '');
     setShowSuggestions(false);
+  };
+
+  const handleSmartPaste = (text: string) => {
+    setSmartPasteText(text);
+
+    const skinTypeMatch = text.match(/\*?\*?Tipo de piel:\*?\*?\s*(.*)/i);
+    if (skinTypeMatch && skinTypeMatch[1]) setSkinType(skinTypeMatch[1].trim());
+
+    const benefitsMatch = text.match(/\*?\*?Beneficios:\*?\*?\s*(.*)/i);
+    if (benefitsMatch && benefitsMatch[1]) setBenefits(benefitsMatch[1].trim());
+
+    const ingredientsMatch = text.match(/\*?\*?Ingredientes clave:\*?\*?\s*(.*)/i);
+    if (ingredientsMatch && ingredientsMatch[1]) setKeyIngredients(ingredientsMatch[1].trim());
+
+    const usageMatch = text.match(/\*?\*?Modo de uso:\*?\*?\s*(.*)/i);
+    if (usageMatch && usageMatch[1]) setUsage(usageMatch[1].trim());
   };
 
   const topSkincareBrands = [
@@ -194,6 +230,10 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
       totalPrice,
       minStock: finalMinStock !== '' ? Number(finalMinStock) : undefined,
       showInCatalog,
+      skinType: skinType || undefined,
+      benefits: benefits || undefined,
+      keyIngredients: keyIngredients || undefined,
+      usage: usage || undefined,
     });
 
     resetForm();
@@ -445,8 +485,74 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
         </div>
       </div>
 
+      {/* Detalles del Catálogo (Skincare) */}
+      <div className="pt-6 border-t border-gray-200">
+        <h3 className="text-md font-semibold text-gray-800 mb-4">Detalles del Catálogo (Skincare)</h3>
+
+        <div className="mb-6">
+          <label htmlFor="smart-paste" className="block text-sm font-medium text-purple-700 mb-1 flex items-center gap-1">
+            ✨ Pegado Rápido Gemini
+          </label>
+          <textarea
+            id="smart-paste"
+            rows={4}
+            value={smartPasteText}
+            onChange={(e) => handleSmartPaste(e.target.value)}
+            className="w-full px-3 py-2 border border-purple-200 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 bg-purple-50 text-sm"
+            placeholder="Pega aquí el texto generado por Gemini con asteriscos (**) o sin ellos para autocompletar los campos de abajo."
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="col-span-1">
+            <label htmlFor="prod-skin-type" className="block text-sm font-medium text-gray-700 mb-1">Tipo de Piel</label>
+            <input
+              id="prod-skin-type"
+              type="text"
+              value={skinType}
+              onChange={(e) => setSkinType(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+              placeholder="Ej. Mixta a grasa"
+            />
+          </div>
+          <div className="col-span-1">
+            <label htmlFor="prod-benefits" className="block text-sm font-medium text-gray-700 mb-1">Beneficios</label>
+            <input
+              id="prod-benefits"
+              type="text"
+              value={benefits}
+              onChange={(e) => setBenefits(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+              placeholder="Ej. Controla el sebo y reduce imperfecciones"
+            />
+          </div>
+          <div className="col-span-1">
+            <label htmlFor="prod-ingredients" className="block text-sm font-medium text-gray-700 mb-1">Ingredientes Clave</label>
+            <input
+              id="prod-ingredients"
+              type="text"
+              value={keyIngredients}
+              onChange={(e) => setKeyIngredients(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+              placeholder="Ej. Ácido Salicílico, Zinc"
+            />
+          </div>
+          <div className="col-span-1">
+            <label htmlFor="prod-usage" className="block text-sm font-medium text-gray-700 mb-1">Modo de Uso</label>
+            <input
+              id="prod-usage"
+              type="text"
+              value={usage}
+              onChange={(e) => setUsage(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+              placeholder="Ej. Aplicar mañana y noche sobre el rostro húmedo"
+            />
+          </div>
+        </div>
+      </div>
+
       {/* Switch: Mostrar en Catálogo */}
-      <div className="flex items-center pt-2">
+      <div className="flex items-center pt-4 border-t border-gray-100">
         <label className="flex items-center cursor-pointer">
           <div className="relative">
             <input

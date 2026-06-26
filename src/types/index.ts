@@ -29,6 +29,10 @@ export interface Product {
   sku?: string; // Barcode or custom SKU for faster matching
   minStock?: number; // Minimum stock threshold for reorder alerts
   showInCatalog?: boolean; // Whether to show in public catalog
+  skinType?: string;
+  benefits?: string;
+  keyIngredients?: string;
+  usage?: string;
 }
 
 export interface InventoryItem {
@@ -52,6 +56,10 @@ export interface InventoryItem {
   comparePrice?: number; // Precio antes (oferta) tachado
   minStock?: number; // Minimum stock threshold for reorder alerts
   showInCatalog?: boolean; // Whether to show in public catalog
+  skinType?: string;
+  benefits?: string;
+  keyIngredients?: string;
+  usage?: string;
 }
 
 export interface PublicCatalogItem {
@@ -68,6 +76,10 @@ export interface PublicCatalogItem {
   sellingPrice: number;
   comparePrice?: number; // Precio antes (oferta) tachado
   showInCatalog?: boolean;
+  skinType?: string;
+  benefits?: string;
+  keyIngredients?: string;
+  usage?: string;
 }
 
 export interface Purchase {
