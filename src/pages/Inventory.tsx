@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { InventoryItem, Product } from '../types';
 import { getPaginatedInventoryItems, syncOldProductsToInventory, deleteInventoryItem, updateInventoryItem, addStockAdjustment, addProduct, reindexInventorySearchKeywords } from '../services/db';
-import { Package, Search, Trash2, Edit2, Archive, Layers, PenTool, Image as ImageIcon, AlertTriangle, Plus } from 'lucide-react';
+import { Package, Search, Trash2, Edit2, Archive, Layers, PenTool, Image as ImageIcon, AlertTriangle, Plus, ChevronDown, ChevronUp } from 'lucide-react';
 import { QueryDocumentSnapshot, DocumentData } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -38,6 +38,8 @@ const Inventory = () => {
   // Edit details state
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editForm, setEditForm] = useState<Partial<InventoryItem>>({});
+  const [smartPasteText, setSmartPasteText] = useState('');
+  const [showDetails, setShowDetails] = useState(false);
 
   // Debounce search effect
   useEffect(() => {
@@ -163,7 +165,33 @@ const Inventory = () => {
   const handleOpenEdit = (product: InventoryItem) => {
     setSelectedProduct(product);
     setEditForm({ ...product });
+    setSmartPasteText('');
+    setShowDetails(false);
     setIsEditModalOpen(true);
+  };
+
+  const handleSmartPaste = (text: string) => {
+    setSmartPasteText(text);
+
+    const skinTypeMatch = text.match(/\*?\*?Tipo de piel:\*?\*?\s*(.*)/i);
+    const skinType = skinTypeMatch && skinTypeMatch[1] ? skinTypeMatch[1].trim() : editForm.skinType;
+
+    const benefitsMatch = text.match(/\*?\*?Beneficios:\*?\*?\s*(.*)/i);
+    const benefits = benefitsMatch && benefitsMatch[1] ? benefitsMatch[1].trim() : editForm.benefits;
+
+    const ingredientsMatch = text.match(/\*?\*?Ingredientes clave:\*?\*?\s*(.*)/i);
+    const keyIngredients = ingredientsMatch && ingredientsMatch[1] ? ingredientsMatch[1].trim() : editForm.keyIngredients;
+
+    const usageMatch = text.match(/\*?\*?Modo de uso:\*?\*?\s*(.*)/i);
+    const usage = usageMatch && usageMatch[1] ? usageMatch[1].trim() : editForm.usage;
+
+    setEditForm({
+      ...editForm,
+      skinType: skinType,
+      benefits: benefits,
+      keyIngredients: keyIngredients,
+      usage: usage
+    });
   };
 
   const handleSaveEdit = async (e: React.FormEvent) => {
@@ -908,6 +936,79 @@ const Inventory = () => {
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
                   />
                 </div>
+              </div>
+
+              {/* Detalles del Catálogo (Skincare) */}
+              <div className="pt-4 mt-4 border-t border-gray-200">
+                <div className="flex items-center justify-between mb-2">
+                  <label htmlFor="smart-paste-edit" className="block text-sm font-medium text-purple-700 flex items-center gap-1">
+                    ✨ Pegado Rápido Gemini
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setShowDetails(!showDetails)}
+                    className="text-xs font-medium text-purple-600 hover:text-purple-800 flex items-center gap-1 bg-purple-50 px-2 py-1 rounded-md"
+                  >
+                    {showDetails ? (
+                      <>Ocultar detalles <ChevronUp className="w-3 h-3" /></>
+                    ) : (
+                      <>Editar detalles <ChevronDown className="w-3 h-3" /></>
+                    )}
+                  </button>
+                </div>
+                <textarea
+                  id="smart-paste-edit"
+                  rows={2}
+                  value={smartPasteText}
+                  onChange={(e) => handleSmartPaste(e.target.value)}
+                  className="w-full px-3 py-2 border border-purple-200 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 bg-purple-50 text-sm mb-4"
+                  placeholder="Pega aquí el texto generado por Gemini..."
+                />
+
+                {showDetails && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg border border-gray-100 mb-4">
+                    <div className="col-span-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de Piel</label>
+                      <input
+                        type="text"
+                        value={editForm.skinType || ''}
+                        onChange={(e) => setEditForm({...editForm, skinType: e.target.value})}
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        placeholder="Ej. Mixta a grasa"
+                      />
+                    </div>
+                    <div className="col-span-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Beneficios</label>
+                      <input
+                        type="text"
+                        value={editForm.benefits || ''}
+                        onChange={(e) => setEditForm({...editForm, benefits: e.target.value})}
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        placeholder="Ej. Controla el sebo y reduce imperfecciones"
+                      />
+                    </div>
+                    <div className="col-span-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Ingredientes Clave</label>
+                      <input
+                        type="text"
+                        value={editForm.keyIngredients || ''}
+                        onChange={(e) => setEditForm({...editForm, keyIngredients: e.target.value})}
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        placeholder="Ej. Ácido Salicílico, Zinc"
+                      />
+                    </div>
+                    <div className="col-span-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Modo de Uso</label>
+                      <input
+                        type="text"
+                        value={editForm.usage || ''}
+                        onChange={(e) => setEditForm({...editForm, usage: e.target.value})}
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        placeholder="Ej. Aplicar mañana y noche sobre el rostro húmedo"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="pt-4 mt-4 border-t border-gray-200">
