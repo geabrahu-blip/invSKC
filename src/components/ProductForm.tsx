@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Purchase, Product, InventoryItem } from '../types';
-import { Image as ImageIcon, Plus, Save, X } from 'lucide-react';
+import { Image as ImageIcon, Plus, Save, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { getInventoryItems } from '../services/db';
 import { useAuth } from '../context/AuthContext';
 
@@ -34,6 +34,7 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
   const [keyIngredients, setKeyIngredients] = useState('');
   const [usage, setUsage] = useState('');
   const [smartPasteText, setSmartPasteText] = useState('');
+  const [showDetails, setShowDetails] = useState(false);
 
   const [existingItems, setExistingItems] = useState<InventoryItem[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -244,25 +245,25 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
     : '0.00';
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-gray-200 p-6 space-y-6">
-      <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+    <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-gray-200 p-4 space-y-4">
+      <h2 className="text-md font-semibold text-gray-900 flex items-center gap-2">
         {editingProduct ? (
           <>
-            <Save className="h-5 w-5 text-blue-600" />
+            <Save className="h-4 w-4 text-blue-600" />
             Editar Producto
           </>
         ) : (
           <>
-            <Plus className="h-5 w-5 text-primary-600" />
+            <Plus className="h-4 w-4 text-primary-600" />
             Agregar Nuevo Producto
           </>
         )}
       </h2>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
         {/* Imagen */}
-        <div className="col-span-1 md:col-span-2 lg:col-span-4 flex gap-4 items-start">
-          <div className="w-24 h-24 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center bg-gray-50 overflow-hidden shrink-0">
+        <div className="col-span-1 md:col-span-2 lg:col-span-4 flex gap-3 items-start">
+          <div className="w-16 h-16 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center bg-gray-50 overflow-hidden shrink-0">
             {image ? (
               <img
                 src={image}
@@ -271,36 +272,36 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
                 crossOrigin="anonymous"
               />
             ) : (
-              <ImageIcon className="h-8 w-8 text-gray-400" />
+              <ImageIcon className="h-6 w-6 text-gray-400" />
             )}
           </div>
           <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Imagen del Producto</label>
+            <label className="block text-xs font-medium text-gray-700 mb-0.5">Imagen del Producto</label>
             <input
               type="file"
               accept="image/*"
               onChange={handleImageUpload}
-              className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
+              className="w-full text-xs text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
             />
           </div>
         </div>
 
         {/* Código de Barras / SKU */}
         <div className="col-span-1 md:col-span-2 lg:col-span-1">
-          <label htmlFor="prod-sku" className="block text-sm font-medium text-gray-700 mb-1">Código (SKU/Balanza)</label>
+          <label htmlFor="prod-sku" className="block text-xs font-medium text-gray-700 mb-0.5">Código (SKU/Balanza)</label>
           <input
             id="prod-sku"
             type="text"
             value={sku}
             onChange={(e) => setSku(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 bg-indigo-50"
+            className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 bg-indigo-50"
             placeholder="Ej. CERA-100"
           />
         </div>
 
         {/* Nombre, Marca, Categoría */}
         <div className="col-span-1 md:col-span-2 lg:col-span-3 relative" ref={suggestionRef}>
-          <label htmlFor="prod-name" className="block text-sm font-medium text-gray-700 mb-1">Nombre del Producto</label>
+          <label htmlFor="prod-name" className="block text-xs font-medium text-gray-700 mb-0.5">Nombre del Producto</label>
           <input
             id="prod-name"
             type="text"
@@ -311,7 +312,7 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
               setShowSuggestions(true);
             }}
             onFocus={() => setShowSuggestions(true)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
             placeholder="Ej. Effaclar Gel Purificante Moussant"
           />
           {showSuggestions && filteredSuggestions.length > 0 && (
@@ -336,14 +337,14 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
         </div>
 
         <div className="col-span-1">
-          <label htmlFor="prod-brand" className="block text-sm font-medium text-gray-700 mb-1">Marca (Opcional)</label>
+          <label htmlFor="prod-brand" className="block text-xs font-medium text-gray-700 mb-0.5">Marca (Opcional)</label>
           <input
             id="prod-brand"
             type="text"
             value={brand}
             onChange={(e) => setBrand(e.target.value)}
             list="brands-list"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
             placeholder="Ej. La Roche-Posay"
           />
           <datalist id="brands-list">
@@ -352,12 +353,12 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
         </div>
 
         <div className="col-span-1 md:col-span-2">
-          <label htmlFor="prod-category" className="block text-sm font-medium text-gray-700 mb-1">Categoría Skincare</label>
+          <label htmlFor="prod-category" className="block text-xs font-medium text-gray-700 mb-0.5">Categoría Skincare</label>
           <select
             id="prod-category"
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
             <option value="">Seleccionar categoría...</option>
             <option value="Limpiadores / Gel Limpiador">Limpiadores / Gel Limpiador</option>
@@ -372,47 +373,47 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
         </div>
 
         <div className="col-span-1">
-          <label htmlFor="prod-presentation" className="block text-sm font-medium text-gray-700 mb-1">Presentación (ml/g)</label>
+          <label htmlFor="prod-presentation" className="block text-xs font-medium text-gray-700 mb-0.5">Presentación (ml/g)</label>
           <input
             id="prod-presentation"
             type="text"
             value={presentation}
             onChange={(e) => setPresentation(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
             placeholder="Ej. 236ml, 50g"
           />
         </div>
 
         <div className="col-span-1">
-          <label htmlFor="prod-expiration" className="block text-sm font-medium text-gray-700 mb-1">Vencimiento (Opcional)</label>
+          <label htmlFor="prod-expiration" className="block text-xs font-medium text-gray-700 mb-0.5">Vencimiento (Opcional)</label>
           <input
             id="prod-expiration"
             type="date"
             value={expirationDate}
             onChange={(e) => setExpirationDate(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 text-gray-700"
+            className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 text-gray-700"
           />
         </div>
 
         {isAdmin && (
           <div className="col-span-1">
-            <label htmlFor="prod-min-stock" className="block text-sm font-medium text-gray-700 mb-1">Stock Mínimo (Alerta)</label>
+            <label htmlFor="prod-min-stock" className="block text-xs font-medium text-gray-700 mb-0.5">Stock Mínimo (Alerta)</label>
             <input
               id="prod-min-stock"
               type="number"
               min="0"
               value={minStock}
               onChange={(e) => setMinStock(e.target.value !== '' ? Number(e.target.value) : '')}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 bg-orange-50"
+              className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 bg-orange-50"
               placeholder="Ej. 5"
             />
           </div>
         )}
 
-        <div className="col-span-1 md:col-span-2 lg:col-span-4 grid grid-cols-1 md:grid-cols-4 gap-4 pt-4 mt-2 border-t border-gray-100">
+        <div className="col-span-1 md:col-span-2 lg:col-span-4 grid grid-cols-2 md:grid-cols-5 gap-3 pt-3 mt-1 border-t border-gray-100">
           {isAdmin && (
             <div className="col-span-1">
-              <label htmlFor="prod-units" className="block text-sm font-medium text-gray-700 mb-1">Unidades</label>
+              <label htmlFor="prod-units" className="block text-xs font-medium text-gray-700 mb-0.5">Unidades</label>
               <input
                 id="prod-units"
                 type="number"
@@ -420,7 +421,7 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
                 required={isAdmin}
                 value={units}
                 onChange={(e) => setUnits(Number(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
               />
             </div>
           )}
@@ -428,7 +429,7 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
           {/* Precios de Entrada */}
           {isAdmin && (
             <div className="col-span-1">
-              <label htmlFor="prod-price-bs" className="block text-sm font-medium text-gray-700 mb-1">Precio Compra (Bs)</label>
+              <label htmlFor="prod-price-bs" className="block text-xs font-medium text-gray-700 mb-0.5">Costo (Bs)</label>
               <input
                 id="prod-price-bs"
                 type="number"
@@ -436,7 +437,7 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
                 required={isAdmin}
                 value={priceBs}
                 onChange={(e) => setPriceBs(Number(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
               />
             </div>
           )}
@@ -444,7 +445,7 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
           {/* Precios de Salida */}
           {isAdmin && (
             <div className="col-span-1">
-              <label htmlFor="prod-price-mayor" className="block text-sm font-medium text-gray-700 mb-1">Precio x Mayor</label>
+              <label htmlFor="prod-price-mayor" className="block text-xs font-medium text-gray-700 mb-0.5">Precio x Mayor</label>
               <input
                 id="prod-price-mayor"
                 type="number"
@@ -452,26 +453,26 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
                 required={isAdmin}
                 value={wholesalePrice}
                 onChange={(e) => setWholesalePrice(Number(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
               />
             </div>
           )}
 
           <div className="col-span-1">
-            <label htmlFor="prod-compare-price" className="block text-sm font-medium text-gray-700 mb-1">Precio Antes (Oferta)</label>
+            <label htmlFor="prod-compare-price" className="block text-xs font-medium text-gray-700 mb-0.5">Precio Antes</label>
             <input
               id="prod-compare-price"
               type="number"
               step="0.01"
               value={comparePrice}
               onChange={(e) => setComparePrice(e.target.value !== '' && !isNaN(Number(e.target.value)) ? Number(e.target.value) : '')}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400 text-gray-500 line-through decoration-gray-400"
+              className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400 text-gray-500 line-through decoration-gray-400"
               placeholder="Ej. 150.00"
             />
           </div>
 
           <div className="col-span-1">
-            <label htmlFor="prod-price-unidad" className="block text-sm font-medium text-gray-700 mb-1">Precio Unidad (Venta)</label>
+            <label htmlFor="prod-price-unidad" className="block text-xs font-medium text-gray-700 mb-0.5">Precio Venta</label>
             <input
               id="prod-price-unidad"
               type="number"
@@ -479,80 +480,91 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
               required
               value={sellingPrice}
               onChange={(e) => setSellingPrice(Number(e.target.value))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 font-bold text-emerald-700"
+              className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 font-bold text-emerald-700"
             />
           </div>
         </div>
       </div>
 
       {/* Detalles del Catálogo (Skincare) */}
-      <div className="pt-6 border-t border-gray-200">
-        <h3 className="text-md font-semibold text-gray-800 mb-4">Detalles del Catálogo (Skincare)</h3>
-
-        <div className="mb-6">
-          <label htmlFor="smart-paste" className="block text-sm font-medium text-purple-700 mb-1 flex items-center gap-1">
+      <div className="pt-4 border-t border-gray-200">
+        <div className="flex items-center justify-between mb-2">
+          <label htmlFor="smart-paste" className="block text-sm font-medium text-purple-700 flex items-center gap-1">
             ✨ Pegado Rápido Gemini
           </label>
-          <textarea
-            id="smart-paste"
-            rows={4}
-            value={smartPasteText}
-            onChange={(e) => handleSmartPaste(e.target.value)}
-            className="w-full px-3 py-2 border border-purple-200 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 bg-purple-50 text-sm"
-            placeholder="Pega aquí el texto generado por Gemini con asteriscos (**) o sin ellos para autocompletar los campos de abajo."
-          />
+          <button
+            type="button"
+            onClick={() => setShowDetails(!showDetails)}
+            className="text-xs font-medium text-purple-600 hover:text-purple-800 flex items-center gap-1 bg-purple-50 px-2 py-1 rounded-md"
+          >
+            {showDetails ? (
+              <>Ocultar detalles <ChevronUp className="w-3 h-3" /></>
+            ) : (
+              <>Editar detalles <ChevronDown className="w-3 h-3" /></>
+            )}
+          </button>
         </div>
+        <textarea
+          id="smart-paste"
+          rows={2}
+          value={smartPasteText}
+          onChange={(e) => handleSmartPaste(e.target.value)}
+          className="w-full px-2 py-1.5 border border-purple-200 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 bg-purple-50 text-sm mb-2"
+          placeholder="Pega aquí el texto generado por Gemini..."
+        />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="col-span-1">
-            <label htmlFor="prod-skin-type" className="block text-sm font-medium text-gray-700 mb-1">Tipo de Piel</label>
-            <input
-              id="prod-skin-type"
-              type="text"
-              value={skinType}
-              onChange={(e) => setSkinType(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-              placeholder="Ej. Mixta a grasa"
-            />
+        {showDetails && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-3 bg-gray-50 rounded-lg border border-gray-100">
+            <div className="col-span-1">
+              <label htmlFor="prod-skin-type" className="block text-xs font-medium text-gray-700 mb-0.5">Tipo de Piel</label>
+              <input
+                id="prod-skin-type"
+                type="text"
+                value={skinType}
+                onChange={(e) => setSkinType(e.target.value)}
+                className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                placeholder="Ej. Mixta a grasa"
+              />
+            </div>
+            <div className="col-span-1">
+              <label htmlFor="prod-benefits" className="block text-xs font-medium text-gray-700 mb-0.5">Beneficios</label>
+              <input
+                id="prod-benefits"
+                type="text"
+                value={benefits}
+                onChange={(e) => setBenefits(e.target.value)}
+                className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                placeholder="Ej. Controla el sebo y reduce imperfecciones"
+              />
+            </div>
+            <div className="col-span-1">
+              <label htmlFor="prod-ingredients" className="block text-xs font-medium text-gray-700 mb-0.5">Ingredientes Clave</label>
+              <input
+                id="prod-ingredients"
+                type="text"
+                value={keyIngredients}
+                onChange={(e) => setKeyIngredients(e.target.value)}
+                className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                placeholder="Ej. Ácido Salicílico, Zinc"
+              />
+            </div>
+            <div className="col-span-1">
+              <label htmlFor="prod-usage" className="block text-xs font-medium text-gray-700 mb-0.5">Modo de Uso</label>
+              <input
+                id="prod-usage"
+                type="text"
+                value={usage}
+                onChange={(e) => setUsage(e.target.value)}
+                className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                placeholder="Ej. Aplicar mañana y noche sobre el rostro húmedo"
+              />
+            </div>
           </div>
-          <div className="col-span-1">
-            <label htmlFor="prod-benefits" className="block text-sm font-medium text-gray-700 mb-1">Beneficios</label>
-            <input
-              id="prod-benefits"
-              type="text"
-              value={benefits}
-              onChange={(e) => setBenefits(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-              placeholder="Ej. Controla el sebo y reduce imperfecciones"
-            />
-          </div>
-          <div className="col-span-1">
-            <label htmlFor="prod-ingredients" className="block text-sm font-medium text-gray-700 mb-1">Ingredientes Clave</label>
-            <input
-              id="prod-ingredients"
-              type="text"
-              value={keyIngredients}
-              onChange={(e) => setKeyIngredients(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-              placeholder="Ej. Ácido Salicílico, Zinc"
-            />
-          </div>
-          <div className="col-span-1">
-            <label htmlFor="prod-usage" className="block text-sm font-medium text-gray-700 mb-1">Modo de Uso</label>
-            <input
-              id="prod-usage"
-              type="text"
-              value={usage}
-              onChange={(e) => setUsage(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-              placeholder="Ej. Aplicar mañana y noche sobre el rostro húmedo"
-            />
-          </div>
-        </div>
+        )}
       </div>
 
       {/* Switch: Mostrar en Catálogo */}
-      <div className="flex items-center pt-4 border-t border-gray-100">
+      <div className="flex items-center pt-3 border-t border-gray-100">
         <label className="flex items-center cursor-pointer">
           <div className="relative">
             <input
@@ -561,21 +573,21 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
               checked={showInCatalog}
               onChange={(e) => setShowInCatalog(e.target.checked)}
             />
-            <div className={`block w-10 h-6 rounded-full transition-colors ${showInCatalog ? 'bg-primary-500' : 'bg-gray-300'}`}></div>
-            <div className={`dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${showInCatalog ? 'transform translate-x-4' : ''}`}></div>
+            <div className={`block w-8 h-5 rounded-full transition-colors ${showInCatalog ? 'bg-primary-500' : 'bg-gray-300'}`}></div>
+            <div className={`dot absolute left-1 top-1 bg-white w-3 h-3 rounded-full transition-transform ${showInCatalog ? 'transform translate-x-3' : ''}`}></div>
           </div>
-          <div className="ml-3 text-sm font-medium text-gray-700">
+          <div className="ml-2 text-xs font-medium text-gray-700">
             Mostrar en Catálogo Público
           </div>
         </label>
       </div>
 
-      <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-        <div className="text-sm">
+      <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+        <div className="text-xs">
           {isAdmin && (
             <>
-              <span className="text-gray-500">Costo Total del Lote: </span>
-              <span className="text-lg font-bold text-gray-900">Bs. {currentTotal}</span>
+              <span className="text-gray-500">Costo Total Lote: </span>
+              <span className="text-sm font-bold text-gray-900">Bs. {currentTotal}</span>
             </>
           )}
         </div>
@@ -585,16 +597,16 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
             <button
               type="button"
               onClick={onCancelEdit}
-              className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
+              className="px-3 py-1.5 text-xs text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors flex items-center gap-1"
             >
-              <X className="w-4 h-4" /> Cancelar
+              <X className="w-3 h-3" /> Cancelar
             </button>
           )}
           <button
             type="submit"
-            className={`px-6 py-2 rounded-lg font-medium transition-colors text-white ${editingProduct ? 'bg-blue-600 hover:bg-blue-700' : 'bg-primary-600 hover:bg-primary-700'}`}
+            className={`px-4 py-1.5 text-xs rounded-md font-medium transition-colors text-white ${editingProduct ? 'bg-blue-600 hover:bg-blue-700' : 'bg-primary-600 hover:bg-primary-700'}`}
           >
-            {editingProduct ? 'Actualizar Producto' : 'Guardar Producto'}
+            {editingProduct ? 'Actualizar' : 'Guardar'}
           </button>
         </div>
       </div>
