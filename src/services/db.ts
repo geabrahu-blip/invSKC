@@ -52,6 +52,10 @@ const syncToPublicCatalog = async (item: InventoryItem) => {
     sellingPrice: item.sellingPrice || 0,
     comparePrice: Number(item.comparePrice) || 0,
     showInCatalog: true, // Si llegó aquí es porque no es explícitamente false
+    skinType: item.skinType || '',
+    benefits: item.benefits || '',
+    keyIngredients: item.keyIngredients || '',
+    usage: item.usage || '',
   };
 
   await setDoc(catalogRef, publicItem);
@@ -305,7 +309,11 @@ export const addProduct = async (product: Omit<Product, 'id'>): Promise<Product>
       expirationDate: newProduct.expirationDate || existingInv.expirationDate,
       sku: newProduct.sku || existingInv.sku,
       image: newProduct.image || existingInv.image, // update image if new one provided
-      minStock: newProduct.minStock ?? existingInv.minStock // update minStock if provided
+      minStock: newProduct.minStock ?? existingInv.minStock, // update minStock if provided
+      skinType: newProduct.skinType || existingInv.skinType,
+      benefits: newProduct.benefits || existingInv.benefits,
+      keyIngredients: newProduct.keyIngredients || existingInv.keyIngredients,
+      usage: newProduct.usage || existingInv.usage
     };
     // Asegurarnos de actualizar las searchKeywords también en el inventario
     const invKeywords = generateSearchKeywords(updatedInv);
@@ -346,7 +354,11 @@ export const addProduct = async (product: Omit<Product, 'id'>): Promise<Product>
       priceBs: newProduct.priceBs,
       wholesalePrice: newProduct.wholesalePrice,
       sellingPrice: newProduct.sellingPrice,
-      minStock: newProduct.minStock || 0
+      minStock: newProduct.minStock || 0,
+      skinType: newProduct.skinType,
+      benefits: newProduct.benefits,
+      keyIngredients: newProduct.keyIngredients,
+      usage: newProduct.usage
     };
     const invKeywords = generateSearchKeywords(invItem);
     const invToSave = sanitizeForFirestore({ ...invItem, searchKeywords: invKeywords });
@@ -409,7 +421,11 @@ export const updateProduct = async (updatedProduct: Product): Promise<Product> =
       wholesalePrice: updatedProduct.wholesalePrice,
       sellingPrice: updatedProduct.sellingPrice,
       units: Math.max(0, existingInv.units + unitDifference), // Avoid negative inventory
-      minStock: updatedProduct.minStock ?? existingInv.minStock // inherit or update minStock
+      minStock: updatedProduct.minStock ?? existingInv.minStock, // inherit or update minStock
+      skinType: updatedProduct.skinType || existingInv.skinType,
+      benefits: updatedProduct.benefits || existingInv.benefits,
+      keyIngredients: updatedProduct.keyIngredients || existingInv.keyIngredients,
+      usage: updatedProduct.usage || existingInv.usage
     };
 
     const invKeywords = generateSearchKeywords(updatedInv);
