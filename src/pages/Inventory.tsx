@@ -885,7 +885,7 @@ const Inventory = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
                   <input
@@ -894,6 +894,17 @@ const Inventory = () => {
                     value={editForm.name || ''}
                     onChange={(e) => setEditForm({...editForm, name: e.target.value})}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                  />
+                </div>
+
+                <div className="md:col-span-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Código (SKU/Balanza)</label>
+                  <input
+                    type="text"
+                    value={editForm.sku || ''}
+                    onChange={(e) => setEditForm({...editForm, sku: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 bg-indigo-50"
+                    placeholder="Ej. CERA-100"
                   />
                 </div>
 
