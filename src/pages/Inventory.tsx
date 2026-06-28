@@ -1,3 +1,4 @@
+import { topSkincareBrands } from "../utils/constants";
 import { useState, useEffect } from 'react';
 import { InventoryItem, Product } from '../types';
 import { getPaginatedInventoryItems, syncOldProductsToInventory, deleteInventoryItem, updateInventoryItem, addStockAdjustment, addProduct, reindexInventorySearchKeywords } from '../services/db';
@@ -12,6 +13,10 @@ const Inventory = () => {
   const { isAdmin } = useAuth();
   const { success, error } = useToast();
   const [products, setProducts] = useState<InventoryItem[]>([]);
+  const uniqueBrands = Array.from(new Set([
+    ...topSkincareBrands,
+    ...products.map(p => p.brand).filter(Boolean) as string[]
+  ]));
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
   const [isSyncing, setIsSyncing] = useState(false);
@@ -914,8 +919,13 @@ const Inventory = () => {
                     type="text"
                     value={editForm.brand || ''}
                     onChange={(e) => setEditForm({...editForm, brand: e.target.value})}
+                    list="inventory-brands-list"
                     className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                    placeholder="Ej. La Roche-Posay"
                   />
+                  <datalist id="inventory-brands-list">
+                    {uniqueBrands.map((b, i) => <option key={i} value={b} />)}
+                  </datalist>
                 </div>
 
                 <div>
