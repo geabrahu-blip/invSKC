@@ -1,3 +1,4 @@
+import { topSkincareBrands } from "../utils/constants";
 import { useState, useEffect, useRef } from 'react';
 import { Purchase, Product, InventoryItem } from '../types';
 import { Image as ImageIcon, Plus, Save, X, ChevronDown, ChevronUp } from 'lucide-react';
@@ -141,10 +142,6 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
     if (usageMatch && usageMatch[1]) setUsage(usageMatch[1].trim());
   };
 
-  const topSkincareBrands = [
-    "La Roche-Posay", "Eucerin", "CeraVe", "The Ordinary",
-    "Vichy", "ISDIN", "L'Oréal Paris", "Neutrogena"
-  ];
 
   const uniqueBrands = Array.from(new Set([
     ...topSkincareBrands,
