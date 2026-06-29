@@ -1,4 +1,4 @@
-import { topSkincareBrands } from "../utils/constants";
+import { topSkincareBrands, topSkincareCategories } from "../utils/constants";
 import { useState, useEffect, useRef } from 'react';
 import { Purchase, Product, InventoryItem } from '../types';
 import { Image as ImageIcon, Plus, Save, X, ChevronDown, ChevronUp } from 'lucide-react';
@@ -146,6 +146,11 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
   const uniqueBrands = Array.from(new Set([
     ...topSkincareBrands,
     ...existingItems.map(i => i.brand).filter(Boolean) as string[]
+  ]));
+
+  const uniqueCategories = Array.from(new Set([
+    ...topSkincareCategories,
+    ...existingItems.map(i => i.category).filter(Boolean) as string[]
   ]));
 
   const filteredSuggestions = name.length > 1
@@ -351,22 +356,18 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
 
         <div className="col-span-1 md:col-span-2">
           <label htmlFor="prod-category" className="block text-xs font-medium text-gray-700 mb-0.5">Categoría Skincare</label>
-          <select
+          <input
             id="prod-category"
+            type="text"
             value={category}
             onChange={(e) => setCategory(e.target.value)}
+            list="categories-list"
             className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-          >
-            <option value="">Seleccionar categoría...</option>
-            <option value="Limpiadores / Gel Limpiador">Limpiadores / Gel Limpiador</option>
-            <option value="Sérums / Tratamientos">Sérums / Tratamientos</option>
-            <option value="Hidratantes / Cremas">Hidratantes / Cremas</option>
-            <option value="Protectores Solares / Fotoprotección">Protectores Solares / Fotoprotección</option>
-            <option value="Tónicos / Esencias">Tónicos / Esencias</option>
-            <option value="Contorno de Ojos">Contorno de Ojos</option>
-            <option value="Cuidado Corporal / Body Milk">Cuidado Corporal / Body Milk</option>
-            <option value="Otros">Otros...</option>
-          </select>
+            placeholder="Ej. Sérums / Tratamientos"
+          />
+          <datalist id="categories-list">
+            {uniqueCategories.map((c, i) => <option key={i} value={c} />)}
+          </datalist>
         </div>
 
         <div className="col-span-1">
