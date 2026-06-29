@@ -1,4 +1,4 @@
-import { topSkincareBrands } from "../utils/constants";
+import { topSkincareBrands, topSkincareCategories } from "../utils/constants";
 import { useState, useEffect } from 'react';
 import { InventoryItem, Product } from '../types';
 import { getPaginatedInventoryItems, syncOldProductsToInventory, deleteInventoryItem, updateInventoryItem, addStockAdjustment, addProduct, reindexInventorySearchKeywords } from '../services/db';
@@ -16,6 +16,10 @@ const Inventory = () => {
   const uniqueBrands = Array.from(new Set([
     ...topSkincareBrands,
     ...products.map(p => p.brand).filter(Boolean) as string[]
+  ]));
+  const uniqueCategories = Array.from(new Set([
+    ...topSkincareCategories,
+    ...products.map(p => p.category).filter(Boolean) as string[]
   ]));
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
@@ -930,21 +934,17 @@ const Inventory = () => {
 
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-0.5">Categoría</label>
-                  <select
+                  <input
+                    type="text"
                     value={editForm.category || ''}
                     onChange={(e) => setEditForm({...editForm, category: e.target.value})}
+                    list="inventory-categories-list"
                     className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
-                  >
-                    <option value="">Seleccionar categoría...</option>
-                    <option value="Limpiadores / Gel Limpiador">Limpiadores / Gel Limpiador</option>
-                    <option value="Sérums / Tratamientos">Sérums / Tratamientos</option>
-                    <option value="Hidratantes / Cremas">Hidratantes / Cremas</option>
-                    <option value="Protectores Solares / Fotoprotección">Protectores Solares / Fotoprotección</option>
-                    <option value="Tónicos / Esencias">Tónicos / Esencias</option>
-                    <option value="Contorno de Ojos">Contorno de Ojos</option>
-                    <option value="Cuidado Corporal / Body Milk">Cuidado Corporal / Body Milk</option>
-                    <option value="Otros">Otros...</option>
-                  </select>
+                    placeholder="Ej. Sérums / Tratamientos"
+                  />
+                  <datalist id="inventory-categories-list">
+                    {uniqueCategories.map((c, i) => <option key={i} value={c} />)}
+                  </datalist>
                 </div>
 
                 <div>
