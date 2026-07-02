@@ -1,7 +1,7 @@
 import { topSkincareBrands, topSkincareCategories } from "../utils/constants";
 import { useState, useEffect } from 'react';
 import { InventoryItem, Product } from '../types';
-import { getPaginatedInventoryItems, syncOldProductsToInventory, deleteInventoryItem, updateInventoryItem, addStockAdjustment, addProduct, reindexInventorySearchKeywords } from '../services/db';
+import { getPaginatedInventoryItems, syncOldProductsToInventory, deleteInventoryItem, updateInventoryItem, addStockAdjustment, addProduct, reindexInventorySearchKeywords, sanitizeBase64Images } from '../services/db';
 import { Package, Search, Trash2, Edit2, Archive, Layers, PenTool, Image as ImageIcon, AlertTriangle, Plus, ChevronDown, ChevronUp } from 'lucide-react';
 import { QueryDocumentSnapshot, DocumentData } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
@@ -25,6 +25,7 @@ const Inventory = () => {
   const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
   const [isSyncing, setIsSyncing] = useState(false);
   const [isReindexing, setIsReindexing] = useState(false);
+  const [isSanitizing, setIsSanitizing] = useState(false);
 
   // Pagination state
   const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot<DocumentData, DocumentData> | null>(null);
@@ -88,6 +89,21 @@ const Inventory = () => {
     }
   };
 
+  const handleSanitizeImages = async () => {
+    if (!window.confirm("Esto eliminará todas las imágenes gigantes en Base64 de la base de datos, dejando solo las URLs y liberando espacio. ¿Continuar?")) return;
+    setIsSanitizing(true);
+    try {
+      await sanitizeBase64Images();
+      success('Base de datos saneada. Se eliminaron las imágenes en Base64.');
+      loadData(true); // Refrescamos la vista
+    } catch (err) {
+      console.error(err);
+      error('Hubo un error al sanear las imágenes de la base de datos.');
+    } finally {
+      setIsSanitizing(false);
+    }
+  };
+
   const loadData = async (reset: boolean = false) => {
     if (reset) {
       setIsSearching(true);
@@ -130,8 +146,15 @@ const Inventory = () => {
       success('Producto ingresado correctamente al inventario continuo.');
       loadData(true); // Recargar la tabla reseteando la paginación
     } catch (err) {
-      console.error(err);
-      error('Error al guardar el nuevo producto.');
+      if (err instanceof Error && err.message === 'PARTIAL_SUCCESS_IMAGE_FAILED') {
+        setIsAddModalOpen(false);
+        // Mostrar error en toast
+        error('El producto se guardó, pero la imagen falló y no fue subida.');
+        loadData(true);
+      } else {
+        console.error(err);
+        error('Error al guardar el nuevo producto.');
+      }
     }
   };
 
@@ -228,8 +251,14 @@ const Inventory = () => {
       loadData();
     } catch (e) {
       const err = e as Error;
-      console.error('Error saving edits:', err);
-      error(`Error: ${err.message || 'No se pudieron guardar los cambios'}`);
+      if (err.message === 'PARTIAL_SUCCESS_IMAGE_FAILED') {
+        setIsEditModalOpen(false);
+        error('El producto se actualizó, pero la imagen falló y no fue subida.');
+        loadData();
+      } else {
+        console.error('Error saving edits:', err);
+        error(`Error: ${err.message || 'No se pudieron guardar los cambios'}`);
+      }
     }
   };
 
@@ -374,6 +403,14 @@ const Inventory = () => {
                   className="w-full sm:w-auto px-4 py-2 bg-yellow-50 text-yellow-700 hover:bg-yellow-100 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
                 >
                   {isReindexing ? 'Reindexando...' : 'Reindexar Buscador'}
+                </button>
+
+                <button
+                  onClick={handleSanitizeImages}
+                  disabled={isSanitizing}
+                  className="w-full sm:w-auto px-4 py-2 bg-red-50 text-red-700 hover:bg-red-100 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                >
+                  {isSanitizing ? 'Saneando Imágenes...' : 'Sanear Imágenes (Base64)'}
                 </button>
               </>
             )}

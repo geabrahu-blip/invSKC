@@ -187,9 +187,9 @@ const uploadImageToStorage = async (base64String: string, pathRef: string): Prom
     await uploadString(imageRef, base64String, 'data_url');
     return await getDownloadURL(imageRef);
   } catch (error) {
-    // Si la subida falla (CORS, red, etc), capturamos el error rápido y usamos fallback
-    console.error("Storage upload aborted (CORS/Timeout). Falling back to Base64:", error);
-    return base64String;
+    // Si la subida falla (CORS, red, etc), capturamos el error rápido y guardamos vacío para no saturar la BD
+    console.error("Storage upload aborted (CORS/Timeout). Returning empty string:", error);
+    throw new Error('IMAGE_UPLOAD_FAILED');
   }
 };
 
@@ -281,8 +281,18 @@ export const addProduct = async (product: Omit<Product, 'id'>): Promise<Product>
   const id = generateId();
 
   let imageUrl = product.image;
+  let imageUploadFailed = false;
   if (imageUrl) {
-    imageUrl = await uploadImageToStorage(imageUrl, `products/${id}_${Date.now()}.webp`);
+    try {
+      imageUrl = await uploadImageToStorage(imageUrl, `products/${id}_${Date.now()}.webp`);
+    } catch (e) {
+      if (e instanceof Error && e.message === 'IMAGE_UPLOAD_FAILED') {
+        imageUrl = "";
+        imageUploadFailed = true;
+      } else {
+        throw e;
+      }
+    }
   }
 
   const newProduct: Product = { ...product, id, image: imageUrl };
@@ -380,6 +390,10 @@ export const addProduct = async (product: Omit<Product, 'id'>): Promise<Product>
     }
   }
 
+  if (imageUploadFailed) {
+    throw new Error('PARTIAL_SUCCESS_IMAGE_FAILED');
+  }
+
   return newProduct;
 };
 
@@ -391,8 +405,18 @@ export const updateProduct = async (updatedProduct: Product): Promise<Product> =
   const oldProduct = docSnap.data() as Product;
 
   let imageUrl = updatedProduct.image;
+  let imageUploadFailed = false;
   if (imageUrl && imageUrl.startsWith('data:image')) {
-    imageUrl = await uploadImageToStorage(imageUrl, `products/${updatedProduct.id}_${Date.now()}.webp`);
+    try {
+      imageUrl = await uploadImageToStorage(imageUrl, `products/${updatedProduct.id}_${Date.now()}.webp`);
+    } catch (e) {
+      if (e instanceof Error && e.message === 'IMAGE_UPLOAD_FAILED') {
+        imageUrl = "";
+        imageUploadFailed = true;
+      } else {
+        throw e;
+      }
+    }
   }
 
   const searchKeywords = generateSearchKeywords(updatedProduct);
@@ -446,6 +470,10 @@ export const updateProduct = async (updatedProduct: Product): Promise<Product> =
         date: new Date().toISOString().split('T')[0]
       });
     }
+  }
+
+  if (imageUploadFailed) {
+    throw new Error('PARTIAL_SUCCESS_IMAGE_FAILED');
   }
 
   return updatedProduct;
@@ -527,8 +555,18 @@ export const updateInventoryItem = async (item: InventoryItem): Promise<Inventor
   const oldDocSnap = await getDoc(doc(db, 'inventory', item.id));
 
   let imageUrl = item.image;
+  let imageUploadFailed = false;
   if (imageUrl) {
-    imageUrl = await uploadImageToStorage(imageUrl, `inventory/${item.id}_${Date.now()}.webp`);
+    try {
+      imageUrl = await uploadImageToStorage(imageUrl, `inventory/${item.id}_${Date.now()}.webp`);
+    } catch (e) {
+      if (e instanceof Error && e.message === 'IMAGE_UPLOAD_FAILED') {
+        imageUrl = "";
+        imageUploadFailed = true;
+      } else {
+        throw e;
+      }
+    }
   }
 
   const searchKeywords = generateSearchKeywords(item);
@@ -552,6 +590,10 @@ export const updateInventoryItem = async (item: InventoryItem): Promise<Inventor
         date: new Date().toISOString().split('T')[0]
       });
     }
+  }
+
+  if (imageUploadFailed) {
+    throw new Error('PARTIAL_SUCCESS_IMAGE_FAILED');
   }
 
   return itemToSave;
@@ -607,6 +649,26 @@ export const reindexInventorySearchKeywords = async (): Promise<void> => {
 
   await Promise.all(updatePromises);
   console.log(`Reindexados ${snap.docs.length} productos con éxito.`);
+};
+
+export const sanitizeBase64Images = async (): Promise<void> => {
+  const collectionsToClean = ['products', 'inventory', 'public_catalog'];
+
+  for (const collectionName of collectionsToClean) {
+    const q = query(collection(db, collectionName));
+    const snap = await getDocs(q);
+
+    const updatePromises = snap.docs.map(async (docSnap) => {
+      const data = docSnap.data();
+      if (data.image && typeof data.image === 'string' && data.image.startsWith('data:image')) {
+        return updateDoc(doc(db, collectionName, docSnap.id), { image: "" });
+      }
+    });
+
+    // Filtramos los undefined (documentos que no necesitaron actualización) y esperamos a que terminen
+    await Promise.all(updatePromises.filter(Boolean));
+    console.log(`Colección ${collectionName} saneada con éxito.`);
+  }
 };
 
 // Users
