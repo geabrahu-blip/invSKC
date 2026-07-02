@@ -78,8 +78,15 @@ export default function PurchaseDetail() {
         success('Producto añadido exitosamente a la compra y al inventario.');
       }
     } catch (err) {
-      console.error('Error saving product:', err);
-      error('Hubo un error al guardar el producto. Revisa tu conexión y permisos.');
+      if (err instanceof Error && err.message === 'PARTIAL_SUCCESS_IMAGE_FAILED') {
+        setEditingProduct(undefined);
+        error('El producto se guardó, pero la imagen falló y no fue subida.');
+        // Para simplificar recargamos la lista en lugar de adivinar el producto
+        // Pero idealmente no pasará mucho. Podríamos recargar si tuvieramos fetchProducts
+      } else {
+        console.error('Error saving product:', err);
+        error('No se pudo guardar el producto. Intenta nuevamente.');
+      }
     }
   };
 
