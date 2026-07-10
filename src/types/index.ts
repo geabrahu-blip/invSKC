@@ -33,6 +33,8 @@ export interface Product {
   benefits?: string;
   keyIngredients?: string;
   usage?: string;
+  createdAt?: number;
+  lastRestockDate?: number;
 }
 
 export interface InventoryItem {
@@ -60,6 +62,8 @@ export interface InventoryItem {
   benefits?: string;
   keyIngredients?: string;
   usage?: string;
+  createdAt?: number;
+  lastRestockDate?: number;
 }
 
 export interface PublicCatalogItem {
@@ -80,6 +84,8 @@ export interface PublicCatalogItem {
   benefits?: string;
   keyIngredients?: string;
   usage?: string;
+  createdAt?: number;
+  lastRestockDate?: number;
 }
 
 export interface Purchase {

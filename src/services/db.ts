@@ -38,6 +38,18 @@ const syncToPublicCatalog = async (item: InventoryItem) => {
 
   const catalogRef = doc(db, 'public_catalog', item.id);
 
+  // Preserve existing createdAt from catalog if item.createdAt is undefined (for older products)
+  let createdAt = item.createdAt;
+  if (createdAt === undefined) {
+    const catalogSnap = await getDoc(catalogRef);
+    if (catalogSnap.exists()) {
+      const existingData = catalogSnap.data() as PublicCatalogItem;
+      createdAt = existingData.createdAt || Date.now();
+    } else {
+      createdAt = Date.now();
+    }
+  }
+
   const publicItem: PublicCatalogItem = {
     id: item.id,
     name: item.name,
@@ -56,9 +68,14 @@ const syncToPublicCatalog = async (item: InventoryItem) => {
     benefits: item.benefits || '',
     keyIngredients: item.keyIngredients || '',
     usage: item.usage || '',
+    createdAt,
   };
 
-  await setDoc(catalogRef, publicItem);
+  if (item.lastRestockDate !== undefined) {
+    publicItem.lastRestockDate = item.lastRestockDate;
+  }
+
+  await setDoc(catalogRef, publicItem, { merge: true });
 };
 
 // Purchases
@@ -325,6 +342,11 @@ export const addProduct = async (product: Omit<Product, 'id'>): Promise<Product>
       keyIngredients: newProduct.keyIngredients || existingInv.keyIngredients,
       usage: newProduct.usage || existingInv.usage
     };
+
+    if (newProduct.units > 0) {
+      updatedInv.lastRestockDate = Date.now();
+    }
+
     // Asegurarnos de actualizar las searchKeywords también en el inventario
     const invKeywords = generateSearchKeywords(updatedInv);
     const invToSave = sanitizeForFirestore({ ...updatedInv, searchKeywords: invKeywords });
@@ -452,6 +474,10 @@ export const updateProduct = async (updatedProduct: Product): Promise<Product> =
       usage: updatedProduct.usage || existingInv.usage
     };
 
+    if (unitDifference > 0) {
+      updatedInv.lastRestockDate = Date.now();
+    }
+
     const invKeywords = generateSearchKeywords(updatedInv);
     const invToSave = sanitizeForFirestore({ ...updatedInv, searchKeywords: invKeywords });
 
@@ -570,15 +596,25 @@ export const updateInventoryItem = async (item: InventoryItem): Promise<Inventor
   }
 
   const searchKeywords = generateSearchKeywords(item);
-  const itemToSave = sanitizeForFirestore({ ...item, image: imageUrl, searchKeywords });
+  const updatedItem = { ...item, image: imageUrl, searchKeywords };
+
+  let oldItem: InventoryItem | null = null;
+  let unitDifference = 0;
+
+  if (oldDocSnap.exists()) {
+    oldItem = oldDocSnap.data() as InventoryItem;
+    unitDifference = updatedItem.units - oldItem.units;
+    if (unitDifference > 0) {
+      updatedItem.lastRestockDate = Date.now();
+    }
+  }
+
+  const itemToSave = sanitizeForFirestore(updatedItem);
 
   await setDoc(doc(db, 'inventory', itemToSave.id), itemToSave);
   await syncToPublicCatalog(itemToSave);
 
-  if (oldDocSnap.exists()) {
-    const oldItem = oldDocSnap.data() as InventoryItem;
-    const unitDifference = itemToSave.units - oldItem.units;
-
+  if (oldItem) {
     if (unitDifference > 0) {
       await registerStockEntry({
         type: 'RESTOCK',
