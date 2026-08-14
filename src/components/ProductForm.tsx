@@ -444,13 +444,7 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
                   type="number"
                   step="0.01"
                   value={costBaseUsd}
-                  onChange={(e) => {
-                    const newCostUsd = e.target.value === '' ? '' : Number(e.target.value);
-                    setCostBaseUsd(newCostUsd);
-                    if (newCostUsd !== '' && exchangeRate !== '') {
-                      setPriceBs(newCostUsd * Number(exchangeRate));
-                    }
-                  }}
+                  onChange={(e) => setCostBaseUsd(e.target.value === '' ? '' : Number(e.target.value))}
                   className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
               </div>
@@ -461,13 +455,7 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
                   type="number"
                   step="0.01"
                   value={exchangeRate}
-                  onChange={(e) => {
-                    const newRate = e.target.value === '' ? '' : Number(e.target.value);
-                    setExchangeRate(newRate);
-                    if (newRate !== '' && costBaseUsd !== '') {
-                      setPriceBs(Number(costBaseUsd) * newRate);
-                    }
-                  }}
+                  onChange={(e) => setExchangeRate(e.target.value === '' ? '' : Number(e.target.value))}
                   className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
               </div>
@@ -479,13 +467,7 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
                   step="0.01"
                   required={isAdmin}
                   value={priceBs}
-                  onChange={(e) => {
-                    const newPriceBs = e.target.value === '' ? '' : Number(e.target.value);
-                    setPriceBs(newPriceBs);
-                    // If user manually edits priceBs, reset costBaseUsd and exchangeRate to ensure database match
-                    setCostBaseUsd(newPriceBs);
-                    setExchangeRate(1);
-                  }}
+                  onChange={(e) => setPriceBs(e.target.value === '' ? '' : Number(e.target.value))}
                   className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 bg-gray-50"
                 />
               </div>
