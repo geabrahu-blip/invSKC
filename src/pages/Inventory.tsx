@@ -864,13 +864,7 @@ const Inventory = () => {
                         type="number"
                         step="0.01"
                         value={adjustCostBaseUsd}
-                        onChange={(e) => {
-                          const newCost = e.target.value === '' ? '' : Number(e.target.value);
-                          setAdjustCostBaseUsd(newCost);
-                          if (newCost !== '' && adjustExchangeRate !== '') {
-                            setAdjustCost(newCost * Number(adjustExchangeRate));
-                          }
-                        }}
+                        onChange={(e) => setAdjustCostBaseUsd(e.target.value === '' ? '' : Number(e.target.value))}
                         className="w-full px-2 py-1.5 border border-indigo-200 bg-indigo-50/50 rounded-md focus:ring-indigo-500 focus:border-indigo-500 text-sm"
                         placeholder="Ej. 10.00"
                       />
@@ -881,13 +875,7 @@ const Inventory = () => {
                         type="number"
                         step="0.01"
                         value={adjustExchangeRate}
-                        onChange={(e) => {
-                          const newRate = e.target.value === '' ? '' : Number(e.target.value);
-                          setAdjustExchangeRate(newRate);
-                          if (newRate !== '' && adjustCostBaseUsd !== '') {
-                            setAdjustCost(Number(adjustCostBaseUsd) * newRate);
-                          }
-                        }}
+                        onChange={(e) => setAdjustExchangeRate(e.target.value === '' ? '' : Number(e.target.value))}
                         className="w-full px-2 py-1.5 border border-indigo-200 bg-indigo-50/50 rounded-md focus:ring-indigo-500 focus:border-indigo-500 text-sm"
                         placeholder="Ej. 6.96"
                       />
