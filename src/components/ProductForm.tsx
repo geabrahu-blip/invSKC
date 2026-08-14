@@ -21,6 +21,8 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
   const [presentation, setPresentation] = useState('');
   const [expirationDate, setExpirationDate] = useState('');
   const [sku, setSku] = useState('');
+  const [costBaseUsd, setCostBaseUsd] = useState<number | ''>('');
+  const [exchangeRate, setExchangeRate] = useState<number | ''>('');
   const [priceBs, setPriceBs] = useState<number | ''>('');
   const [units, setUnits] = useState<number | ''>('');
   const [wholesalePrice, setWholesalePrice] = useState<number | ''>('');
@@ -68,6 +70,8 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
       setPresentation(editingProduct.presentation || '');
       setExpirationDate(editingProduct.expirationDate || '');
       setSku(editingProduct.sku || '');
+      setCostBaseUsd(editingProduct.costBaseUsd ?? '');
+      setExchangeRate(editingProduct.exchangeRate ?? '');
       setPriceBs(editingProduct.priceBs);
       setUnits(editingProduct.units);
       setWholesalePrice(editingProduct.wholesalePrice);
@@ -92,6 +96,8 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
     setPresentation('');
     setExpirationDate('');
     setSku('');
+    setCostBaseUsd('');
+    setExchangeRate('');
     setPriceBs('');
     setUnits('');
     setWholesalePrice('');
@@ -112,6 +118,8 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
     setCategory(item.category || '');
     setPresentation(item.presentation || '');
     setSku(item.sku || '');
+    setCostBaseUsd(item.costBaseUsd ?? '');
+    setExchangeRate(item.exchangeRate ?? '');
     setPriceBs(item.priceBs);
     setWholesalePrice(item.wholesalePrice);
     setSellingPrice(item.sellingPrice);
@@ -237,6 +245,8 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
       benefits: benefits || undefined,
       keyIngredients: keyIngredients || undefined,
       usage: usage || undefined,
+      costBaseUsd: costBaseUsd !== '' ? Number(costBaseUsd) : undefined,
+      exchangeRate: exchangeRate !== '' ? Number(exchangeRate) : undefined,
     });
 
     resetForm();
@@ -426,18 +436,60 @@ export default function ProductForm({ purchase, onAdd, editingProduct, onCancelE
 
           {/* Precios de Entrada */}
           {isAdmin && (
-            <div className="col-span-1">
-              <label htmlFor="prod-price-bs" className="block text-xs font-medium text-gray-700 mb-0.5">Costo (Bs)</label>
-              <input
-                id="prod-price-bs"
-                type="number"
-                step="0.01"
-                required={isAdmin}
-                value={priceBs}
-                onChange={(e) => setPriceBs(Number(e.target.value))}
-                className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-              />
-            </div>
+            <>
+              <div className="col-span-1">
+                <label htmlFor="prod-cost-usd" className="block text-xs font-medium text-gray-700 mb-0.5">Costo Base ($ USD)</label>
+                <input
+                  id="prod-cost-usd"
+                  type="number"
+                  step="0.01"
+                  value={costBaseUsd}
+                  onChange={(e) => {
+                    const newCostUsd = e.target.value === '' ? '' : Number(e.target.value);
+                    setCostBaseUsd(newCostUsd);
+                    if (newCostUsd !== '' && exchangeRate !== '') {
+                      setPriceBs(newCostUsd * Number(exchangeRate));
+                    }
+                  }}
+                  className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                />
+              </div>
+              <div className="col-span-1">
+                <label htmlFor="prod-exchange-rate" className="block text-xs font-medium text-gray-700 mb-0.5">Tipo de Cambio</label>
+                <input
+                  id="prod-exchange-rate"
+                  type="number"
+                  step="0.01"
+                  value={exchangeRate}
+                  onChange={(e) => {
+                    const newRate = e.target.value === '' ? '' : Number(e.target.value);
+                    setExchangeRate(newRate);
+                    if (newRate !== '' && costBaseUsd !== '') {
+                      setPriceBs(Number(costBaseUsd) * newRate);
+                    }
+                  }}
+                  className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                />
+              </div>
+              <div className="col-span-1">
+                <label htmlFor="prod-price-bs" className="block text-xs font-medium text-gray-700 mb-0.5">Costo Unitario (Bs)</label>
+                <input
+                  id="prod-price-bs"
+                  type="number"
+                  step="0.01"
+                  required={isAdmin}
+                  value={priceBs}
+                  onChange={(e) => {
+                    const newPriceBs = e.target.value === '' ? '' : Number(e.target.value);
+                    setPriceBs(newPriceBs);
+                    // If user manually edits priceBs, reset costBaseUsd and exchangeRate to ensure database match
+                    setCostBaseUsd(newPriceBs);
+                    setExchangeRate(1);
+                  }}
+                  className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 bg-gray-50"
+                />
+              </div>
+            </>
           )}
 
           {/* Precios de Salida */}

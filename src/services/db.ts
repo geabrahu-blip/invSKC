@@ -312,7 +312,26 @@ export const addProduct = async (product: Omit<Product, 'id'>): Promise<Product>
     }
   }
 
-  const newProduct: Product = { ...product, id, image: imageUrl };
+  const exchangeRate = product.exchangeRate ?? 1;
+  const costBaseUsd = product.costBaseUsd ?? product.priceBs;
+
+  const initialHistoryEntry: import('../types').CostHistoryEntry = {
+    loadNumber: 1,
+    date: new Date().toISOString().split('T')[0],
+    costBase: costBaseUsd,
+    exchangeRate: exchangeRate,
+    priceBs: product.priceBs,
+    unitsAdded: product.units,
+  };
+
+  const newProduct: Product = {
+    ...product,
+    id,
+    image: imageUrl,
+    costHistory: product.units > 0 ? [initialHistoryEntry] : [],
+    costBaseUsd,
+    exchangeRate
+  };
 
   // Generar y adjuntar palabras clave para búsquedas en la BD
   const searchKeywords = generateSearchKeywords(newProduct);
@@ -324,6 +343,21 @@ export const addProduct = async (product: Omit<Product, 'id'>): Promise<Product>
   const existingInv = await findExistingInventoryItem(newProduct);
 
   if (existingInv) {
+    let updatedCostHistory = existingInv.costHistory || [];
+    if (newProduct.units > 0) {
+      updatedCostHistory = [
+        ...updatedCostHistory,
+        {
+          loadNumber: (updatedCostHistory.length || 0) + 1,
+          date: new Date().toISOString().split('T')[0],
+          costBase: costBaseUsd,
+          exchangeRate: exchangeRate,
+          priceBs: newProduct.priceBs,
+          unitsAdded: newProduct.units,
+        }
+      ];
+    }
+
     // Update existing inventory item (add units, update prices to latest)
     const updatedInv = {
       ...existingInv,
@@ -340,7 +374,10 @@ export const addProduct = async (product: Omit<Product, 'id'>): Promise<Product>
       skinType: newProduct.skinType || existingInv.skinType,
       benefits: newProduct.benefits || existingInv.benefits,
       keyIngredients: newProduct.keyIngredients || existingInv.keyIngredients,
-      usage: newProduct.usage || existingInv.usage
+      usage: newProduct.usage || existingInv.usage,
+      costHistory: updatedCostHistory,
+      costBaseUsd: costBaseUsd,
+      exchangeRate: exchangeRate
     };
 
     if (newProduct.units > 0) {
@@ -390,7 +427,10 @@ export const addProduct = async (product: Omit<Product, 'id'>): Promise<Product>
       skinType: newProduct.skinType,
       benefits: newProduct.benefits,
       keyIngredients: newProduct.keyIngredients,
-      usage: newProduct.usage
+      usage: newProduct.usage,
+      costHistory: newProduct.units > 0 ? [initialHistoryEntry] : [],
+      costBaseUsd: costBaseUsd,
+      exchangeRate: exchangeRate
     };
     const invKeywords = generateSearchKeywords(invItem);
     const invToSave = sanitizeForFirestore({ ...invItem, searchKeywords: invKeywords });
@@ -606,6 +646,22 @@ export const updateInventoryItem = async (item: InventoryItem): Promise<Inventor
     unitDifference = updatedItem.units - oldItem.units;
     if (unitDifference > 0) {
       updatedItem.lastRestockDate = Date.now();
+
+      const costBaseUsd = updatedItem.costBaseUsd ?? updatedItem.priceBs;
+      const exchangeRate = updatedItem.exchangeRate ?? 1;
+
+      const updatedCostHistory = oldItem.costHistory || [];
+      updatedItem.costHistory = [
+        ...updatedCostHistory,
+        {
+          loadNumber: (updatedCostHistory.length || 0) + 1,
+          date: new Date().toISOString().split('T')[0],
+          costBase: costBaseUsd,
+          exchangeRate: exchangeRate,
+          priceBs: updatedItem.priceBs,
+          unitsAdded: unitDifference,
+        }
+      ];
     }
   }
 

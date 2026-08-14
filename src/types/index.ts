@@ -8,6 +8,15 @@ export interface User {
   storeId?: string; // assigned store for standard user
 }
 
+export interface CostHistoryEntry {
+  loadNumber: number;      // 1, 2, 3...
+  date: string;            // YYYY-MM-DD
+  costBase: number;        // Costo en $ USD (o Bs si no hubo conversión)
+  exchangeRate: number;    // Tipo de cambio aplicado
+  priceBs: number;         // Costo unitario resultante en Bs.
+  unitsAdded: number;      // Unidades añadidas en este lote
+}
+
 export interface Product {
   id: string;
   purchaseId: string;
@@ -35,6 +44,9 @@ export interface Product {
   usage?: string;
   createdAt?: number;
   lastRestockDate?: number;
+  costHistory?: CostHistoryEntry[];
+  costBaseUsd?: number;
+  exchangeRate?: number;
 }
 
 export interface InventoryItem {
@@ -64,6 +76,9 @@ export interface InventoryItem {
   usage?: string;
   createdAt?: number;
   lastRestockDate?: number;
+  costHistory?: CostHistoryEntry[];
+  costBaseUsd?: number;
+  exchangeRate?: number;
 }
 
 export interface PublicCatalogItem {
@@ -86,6 +101,9 @@ export interface PublicCatalogItem {
   usage?: string;
   createdAt?: number;
   lastRestockDate?: number;
+  costHistory?: CostHistoryEntry[];
+  costBaseUsd?: number;
+  exchangeRate?: number;
 }
 
 export interface Purchase {
