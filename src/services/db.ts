@@ -810,3 +810,22 @@ export const clearAllData = async (): Promise<void> => {
     await Promise.all(deletePromises);
   }
 };
+
+// --- Catalog Settings Config ---
+export interface CatalogConfig {
+  featuredBrands: string[];
+}
+
+export const getCatalogConfig = async (): Promise<CatalogConfig> => {
+  const docRef = doc(db, 'settings', 'catalog_config');
+  const docSnap = await getDoc(docRef);
+  if (docSnap.exists()) {
+    return docSnap.data() as CatalogConfig;
+  }
+  return { featuredBrands: [] };
+};
+
+export const updateCatalogConfig = async (config: CatalogConfig): Promise<void> => {
+  const docRef = doc(db, 'settings', 'catalog_config');
+  await setDoc(docRef, config, { merge: true });
+};

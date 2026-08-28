@@ -12,6 +12,7 @@ const Inventory = lazy(() => import('./pages/Inventory'));
 const Catalog = lazy(() => import('./pages/Catalog'));
 const Users = lazy(() => import('./pages/Users'));
 const RestockRequests = lazy(() => import('./pages/RestockRequests'));
+const Settings = lazy(() => import('./pages/Settings'));
 
 function App() {
   return (
@@ -28,6 +29,7 @@ function App() {
                 <Route path="/catalog" element={<Catalog />} />
                 <Route path="/restock" element={<RestockRequests />} />
                 <Route path="/users" element={<Users />} />
+                <Route path="/settings" element={<Settings />} />
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
               </Route>
             </Routes>
