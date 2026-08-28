@@ -721,48 +721,6 @@ export const getStockEntries = async (): Promise<FinancialLot[]> => {
   return querySnapshot.docs.map(doc => doc.data() as FinancialLot);
 };
 
-export const syncOldProductsToInventory = async (): Promise<void> => {
-  // Migrates all existing items from the 'inventory' collection to 'public_catalog'
-  const allInventory = await getInventoryItems();
-  const syncPromises = allInventory.map(item => syncToPublicCatalog(item));
-  await Promise.all(syncPromises);
-  console.log("Inventario sincronizado con catálogo público.");
-};
-
-export const reindexInventorySearchKeywords = async (): Promise<void> => {
-  const q = query(collection(db, 'inventory'));
-  const snap = await getDocs(q);
-
-  const updatePromises = snap.docs.map(async (docSnap) => {
-    const item = docSnap.data() as InventoryItem;
-    const keywords = generateSearchKeywords(item);
-    return setDoc(doc(db, 'inventory', item.id), { ...item, searchKeywords: keywords }, { merge: true });
-  });
-
-  await Promise.all(updatePromises);
-  console.log(`Reindexados ${snap.docs.length} productos con éxito.`);
-};
-
-export const sanitizeBase64Images = async (): Promise<void> => {
-  const collectionsToClean = ['products', 'inventory', 'public_catalog'];
-
-  for (const collectionName of collectionsToClean) {
-    const q = query(collection(db, collectionName));
-    const snap = await getDocs(q);
-
-    const updatePromises = snap.docs.map(async (docSnap) => {
-      const data = docSnap.data();
-      if (data.image && typeof data.image === 'string' && data.image.startsWith('data:image')) {
-        return updateDoc(doc(db, collectionName, docSnap.id), { image: "" });
-      }
-    });
-
-    // Filtramos los undefined (documentos que no necesitaron actualización) y esperamos a que terminen
-    await Promise.all(updatePromises.filter(Boolean));
-    console.log(`Colección ${collectionName} saneada con éxito.`);
-  }
-};
-
 // Users
 export const getUsers = async (): Promise<User[]> => {
   const q = query(collection(db, 'users'));
