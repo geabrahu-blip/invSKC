@@ -68,6 +68,7 @@ const syncToPublicCatalog = async (item: InventoryItem) => {
     benefits: item.benefits || '',
     keyIngredients: item.keyIngredients || '',
     usage: item.usage || '',
+    availableForWholesale: item.availableForWholesale || false,
     createdAt,
   };
 
@@ -151,6 +152,14 @@ const generateSearchKeywords = (product: { name: string, brand?: string, sku?: s
 const sanitizeForFirestore = <T extends Record<string, unknown>>(obj: T): T => {
   const sanitized = { ...obj };
 
+  // Ensure boolean fields are preserved even if false
+  const booleanFields = ['showInCatalog', 'availableForWholesale'];
+  booleanFields.forEach(field => {
+    if (sanitized[field] === undefined) {
+      // Do nothing, just checking. If it is undefined, we might just not delete it if we don't want to crash.
+    }
+  });
+
   // Convert known optional string fields to "" if undefined
   const stringFields = ['sku', 'brand', 'category', 'presentation', 'expirationDate', 'gender'];
   stringFields.forEach(field => {
@@ -173,7 +182,7 @@ const sanitizeForFirestore = <T extends Record<string, unknown>>(obj: T): T => {
   // Remove completely undefined numeric or complex fields to prevent crash
   Object.keys(sanitized).forEach(key => {
     if (sanitized[key] === undefined || sanitized[key] === '') {
-      if (!stringFields.includes(key)) {
+      if (!stringFields.includes(key) && typeof sanitized[key] !== 'boolean') {
          delete sanitized[key];
       }
     }
@@ -689,6 +698,21 @@ export const updateInventoryItem = async (item: InventoryItem): Promise<Inventor
   }
 
   return itemToSave;
+};
+
+export const toggleWholesaleAvailability = async (id: string, availableForWholesale: boolean): Promise<void> => {
+  // Update in inventory
+  await updateDoc(doc(db, 'inventory', id), { availableForWholesale });
+
+  // Try to update in public catalog as well if it exists
+  try {
+    const catalogDoc = await getDoc(doc(db, 'public_catalog', id));
+    if (catalogDoc.exists()) {
+      await updateDoc(doc(db, 'public_catalog', id), { availableForWholesale });
+    }
+  } catch (error) {
+    console.warn("Could not update public catalog for wholesale availability", error);
+  }
 };
 
 export const deleteInventoryItem = async (id: string): Promise<void> => {

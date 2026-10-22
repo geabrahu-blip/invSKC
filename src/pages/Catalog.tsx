@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { InventoryItem } from '../types';
-import { getInventoryItems } from '../services/db';
-import { Package, Search, Image as ImageIcon, Tags, Grid } from 'lucide-react';
+import { getInventoryItems, toggleWholesaleAvailability } from '../services/db';
+import { Package, Search, Image as ImageIcon, Tags, Grid, Building2, Store } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function Catalog() {
   const { isAdmin } = useAuth();
   const [products, setProducts] = useState<InventoryItem[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showWholesaleOnly, setShowWholesaleOnly] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -26,13 +27,37 @@ export default function Catalog() {
     setProducts(visibleProducts);
   };
 
-  const filteredProducts = products.filter(p =>
-    p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (p.brand && p.brand.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (p.category && p.category.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const handleToggleWholesale = async (id: string, currentVal: boolean | undefined) => {
+    const newVal = !(currentVal || false);
 
-  return (
+    // Optimistic UI update
+    setProducts(prev => prev.map(p =>
+      p.id === id ? { ...p, availableForWholesale: newVal } : p
+    ));
+
+    try {
+      await toggleWholesaleAvailability(id, newVal);
+    } catch (e) {
+      console.error(e);
+      // Revert on error
+      setProducts(prev => prev.map(p =>
+        p.id === id ? { ...p, availableForWholesale: currentVal } : p
+      ));
+    }
+  };
+
+  const filteredProducts = products.filter(p => {
+    const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (p.brand && p.brand.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (p.category && p.category.toLowerCase().includes(searchTerm.toLowerCase()));
+
+    if (showWholesaleOnly && isAdmin) {
+      return matchesSearch && p.availableForWholesale;
+    }
+
+    return matchesSearch;
+  });
+return (
     <div className="space-y-8 max-w-7xl mx-auto pb-10">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -41,23 +66,40 @@ export default function Catalog() {
             Catálogo Comercial
           </h1>
           <p className="mt-1 text-sm text-gray-500">
-            Vista de catálogo para consultar precios de venta y disponibilidad sin revelar costos.
+            Vista de catálogo para consultar precios de venta y disponibilidad.
           </p>
         </div>
 
-        {/* Search Bar */}
-        <div className="bg-white p-2 rounded-xl shadow-sm border border-gray-100 flex items-center min-w-[300px]">
-          <div className="relative w-full">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-gray-400" />
+        <div className="flex flex-col sm:flex-row items-center gap-3">
+          {/* Wholesale Filter Toggle (Admin Only) */}
+          {isAdmin && (
+            <button
+                        onClick={() => setShowWholesaleOnly(!showWholesaleOnly)}
+                        className={`flex-shrink-0 w-full sm:w-auto px-4 py-2.5 rounded-xl font-medium text-sm transition-colors flex items-center justify-center gap-2 border ${
+                          showWholesaleOnly
+                            ? 'bg-blue-50 border-blue-200 text-blue-700'
+                            : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+                        }`}
+                      >
+                        {showWholesaleOnly ? <Building2 className="w-4 h-4" /> : <Store className="w-4 h-4" />}
+                        {showWholesaleOnly ? 'Viendo al Por Mayor' : 'Ver al Por Mayor'}
+                      </button>
+          )}
+
+          {/* Search Bar */}
+          <div className="bg-white p-2 rounded-xl shadow-sm border border-gray-100 flex items-center w-full sm:min-w-[300px]">
+            <div className="relative w-full">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Search className="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                type="text"
+                placeholder="Buscar productos..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="block w-full pl-10 pr-3 py-2 border-0 bg-transparent text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm"
+              />
             </div>
-            <input
-              type="text"
-              placeholder="Buscar productos..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="block w-full pl-10 pr-3 py-2 border-0 bg-transparent text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm"
-            />
           </div>
         </div>
       </div>
@@ -72,7 +114,7 @@ export default function Catalog() {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {filteredProducts.map(product => (
             <div key={product.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow flex flex-col h-full">
-              <div className="aspect-square w-full bg-white relative border-b border-gray-100 flex items-center justify-center overflow-hidden shrink-0">
+              <div className="aspect-square w-full bg-white relative border-b border-gray-100 flex items-center justify-center overflow-hidden shrink-0 group">
                 {product.image ? (
                   <img src={product.image} alt={product.name} className="w-full h-full object-contain p-2" />
                 ) : (
@@ -80,13 +122,32 @@ export default function Catalog() {
                 )}
 
                 {isAdmin && (
-                  <div className="absolute top-2 right-2">
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-bold shadow-sm ${
-                      product.units > 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
-                    }`}>
-                      Stock: {product.units}
-                    </span>
-                  </div>
+                  <>
+                    <div className="absolute top-2 right-2 flex flex-col gap-2 items-end">
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-bold shadow-sm ${
+                        product.units > 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
+                      }`}>
+                        Stock: {product.units}
+                      </span>
+                    </div>
+
+                    <div className="absolute bottom-2 left-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex justify-center">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggleWholesale(product.id, product.availableForWholesale);
+                        }}
+                        className={`text-xs px-3 py-1.5 rounded-full font-medium shadow-sm border transition-colors flex items-center gap-1.5 ${
+                          product.availableForWholesale
+                            ? 'bg-blue-600 border-blue-600 text-white hover:bg-blue-700'
+                            : 'bg-white/90 backdrop-blur border-gray-200 text-gray-700 hover:bg-white hover:border-gray-300'
+                        }`}
+                      >
+                        <Building2 className="w-3.5 h-3.5" />
+                        {product.availableForWholesale ? 'Habilitado x Mayor' : 'Habilitar x Mayor'}
+                      </button>
+                    </div>
+                  </>
                 )}
               </div>
 

@@ -42,6 +42,7 @@ export interface Product {
   benefits?: string;
   keyIngredients?: string;
   usage?: string;
+  availableForWholesale?: boolean; // Habilita el producto para ser mostrado en el filtro "al por mayor"
   createdAt?: number;
   lastRestockDate?: number;
   costHistory?: CostHistoryEntry[];
@@ -74,6 +75,7 @@ export interface InventoryItem {
   benefits?: string;
   keyIngredients?: string;
   usage?: string;
+  availableForWholesale?: boolean; // Habilita el producto para ser mostrado en el filtro "al por mayor"
   createdAt?: number;
   lastRestockDate?: number;
   costHistory?: CostHistoryEntry[];
@@ -99,6 +101,7 @@ export interface PublicCatalogItem {
   benefits?: string;
   keyIngredients?: string;
   usage?: string;
+  availableForWholesale?: boolean; // Habilita el producto para ser mostrado en el filtro "al por mayor"
   createdAt?: number;
   lastRestockDate?: number;
   costHistory?: CostHistoryEntry[];
