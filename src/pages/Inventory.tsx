@@ -2,7 +2,7 @@ import { topSkincareBrands, topSkincareCategories } from "../utils/constants";
 import { useState, useEffect } from 'react';
 import { InventoryItem, Product } from '../types';
 import { getPaginatedInventoryItems, deleteInventoryItem, updateInventoryItem, addStockAdjustment, addProduct } from '../services/db';
-import { Package, Search, Trash2, Edit2, Archive, Layers, PenTool, Image as ImageIcon, AlertTriangle, Plus, ChevronDown, ChevronUp, Clock } from 'lucide-react';
+import { Package, Search, Trash2, Edit2, Archive, Layers, PenTool, Image as ImageIcon, AlertTriangle, Plus, ChevronDown, ChevronUp, Clock, Building2 } from 'lucide-react';
 import { QueryDocumentSnapshot, DocumentData } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -139,6 +139,29 @@ const Inventory = () => {
       console.error("Error cargando más productos:", err);
     } finally {
       setIsLoadingMore(false);
+    }
+  };
+
+  const handleToggleWholesale = async (id: string, currentVal: boolean | undefined) => {
+    const newVal = !(currentVal || false);
+    const productToUpdate = products.find(p => p.id === id);
+    if (!productToUpdate) return;
+
+    // Optimistic UI update
+    setProducts(prev => prev.map(p =>
+      p.id === id ? { ...p, availableForWholesale: newVal } : p
+    ));
+
+    try {
+      await updateInventoryItem({ ...productToUpdate, availableForWholesale: newVal });
+      success(`Venta al por mayor ${newVal ? 'habilitada' : 'deshabilitada'} para este producto.`);
+    } catch (e) {
+      console.error(e);
+      // Revert on error
+      setProducts(prev => prev.map(p =>
+        p.id === id ? { ...p, availableForWholesale: currentVal } : p
+      ));
+      error('No se pudo actualizar la configuración al por mayor.');
     }
   };
 
@@ -498,23 +521,39 @@ const Inventory = () => {
               </div>
 
               {/* Botones Grandes Táctiles */}
-              <div className="p-4 flex gap-3">
+              <div className="p-4 flex flex-col gap-3">
+                <div className="flex gap-3">
+                  {isAdmin && (
+                    <button
+                      onClick={() => handleOpenAdjustStock(product)}
+                      className="flex-1 flex justify-center items-center gap-2 py-3 bg-indigo-50 text-indigo-700 rounded-lg font-medium hover:bg-indigo-100 transition-colors"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                      Stock
+                    </button>
+                  )}
+                  <button
+                    onClick={() => handleOpenEdit(product)}
+                    className="flex-1 flex justify-center items-center gap-2 py-3 bg-gray-50 text-gray-700 border border-gray-200 rounded-lg font-medium hover:bg-gray-100 transition-colors"
+                  >
+                    <PenTool className="w-4 h-4" />
+                    Editar
+                  </button>
+                </div>
                 {isAdmin && (
                   <button
-                    onClick={() => handleOpenAdjustStock(product)}
-                    className="flex-1 flex justify-center items-center gap-2 py-3 bg-indigo-50 text-indigo-700 rounded-lg font-medium hover:bg-indigo-100 transition-colors"
+                    onClick={() => handleToggleWholesale(product.id, product.availableForWholesale)}
+                    className={cn(
+                      "w-full flex justify-center items-center gap-2 py-3 rounded-lg font-medium transition-colors border",
+                      product.availableForWholesale
+                        ? "bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100"
+                        : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
+                    )}
                   >
-                    <Edit2 className="w-4 h-4" />
-                    Stock
+                    <Building2 className="w-4 h-4" />
+                    {product.availableForWholesale ? 'Habilitado al por mayor' : 'Habilitar al por mayor'}
                   </button>
                 )}
-                <button
-                  onClick={() => handleOpenEdit(product)}
-                  className="flex-1 flex justify-center items-center gap-2 py-3 bg-gray-50 text-gray-700 border border-gray-200 rounded-lg font-medium hover:bg-gray-100 transition-colors"
-                >
-                  <PenTool className="w-4 h-4" />
-                  Editar
-                </button>
               </div>
             </div>
           );
@@ -638,35 +677,54 @@ const Inventory = () => {
                   </td>
 
                   <td className="px-6 py-4 text-center">
-                    <div className="flex items-center justify-center gap-2">
-                      {isAdmin && (
-                        <button
-                          onClick={() => handleOpenAdjustStock(product)}
-                          className="inline-flex items-center gap-1 px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-md hover:bg-indigo-100 transition-colors"
-                          title="Ajustar stock (Quitar / Añadir)"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                          Stock
-                        </button>
-                      )}
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-center justify-center gap-2">
+                        {isAdmin && (
+                          <button
+                            onClick={() => handleOpenAdjustStock(product)}
+                            className="inline-flex items-center gap-1 px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-md hover:bg-indigo-100 transition-colors"
+                            title="Ajustar stock (Quitar / Añadir)"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                            Stock
+                          </button>
+                        )}
 
-                      <button
-                        onClick={() => handleOpenEdit(product)}
-                        className="inline-flex items-center gap-1 px-3 py-1.5 bg-gray-50 text-gray-700 border border-gray-200 rounded-md hover:bg-gray-100 transition-colors"
-                        title="Editar detalles y precios"
-                      >
-                        <PenTool className="w-4 h-4" />
-                        Editar
-                      </button>
-
-                      {isAdmin && (
                         <button
-                          onClick={() => handleDeleteItem(product.id)}
-                          className="inline-flex items-center p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600 rounded-md transition-colors ml-2"
-                          title="Eliminar registro"
+                          onClick={() => handleOpenEdit(product)}
+                          className="inline-flex items-center gap-1 px-3 py-1.5 bg-gray-50 text-gray-700 border border-gray-200 rounded-md hover:bg-gray-100 transition-colors"
+                          title="Editar detalles y precios"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <PenTool className="w-4 h-4" />
+                          Editar
                         </button>
+
+                        {isAdmin && (
+                          <button
+                            onClick={() => handleDeleteItem(product.id)}
+                            className="inline-flex items-center p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600 rounded-md transition-colors ml-2"
+                            title="Eliminar registro"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                      {isAdmin && (
+                        <div className="flex justify-center">
+                          <button
+                            onClick={() => handleToggleWholesale(product.id, product.availableForWholesale)}
+                            className={cn(
+                              "inline-flex items-center gap-1.5 px-3 py-1 rounded text-xs font-medium transition-colors border",
+                              product.availableForWholesale
+                                ? "bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100"
+                                : "bg-white text-gray-500 border-gray-200 hover:bg-gray-50"
+                            )}
+                            title="Alternar disponibilidad para venta al por mayor"
+                          >
+                            <Building2 className="w-3.5 h-3.5" />
+                            {product.availableForWholesale ? 'Habilitado x Mayor' : 'Habilitar x Mayor'}
+                          </button>
+                        </div>
                       )}
                     </div>
                   </td>
